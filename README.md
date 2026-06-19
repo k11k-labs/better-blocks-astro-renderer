@@ -114,22 +114,31 @@ import 'katex/dist/katex.min.css';
 
 `katex` ships as a dependency of this package, so the stylesheet resolves without a separate install. If KaTeX fails to parse a formula, the renderer falls back to the raw LaTeX source instead of crashing.
 
+### Diagrams (Mermaid)
+
+[Mermaid](https://mermaid.js.org/) diagram blocks (`{ type: 'diagram', format: 'mermaid' }`) are **pre-rendered to inline SVG on the server** using [`beautiful-mermaid`](https://www.npmjs.com/package/beautiful-mermaid) — a pure-Node renderer that needs **no headless browser** (no Puppeteer, no Chromium download). Like math, rendering happens during SSR and static builds with **zero client-side JavaScript** and no hydration step.
+
+Supported diagram types — **flowchart, sequence, state, class, ER, and xychart** — render to a `<div class="mermaid-diagram">` wrapping the generated SVG. Diagram types `beautiful-mermaid` does not implement yet (gantt, pie, mindmap, gitGraph, …) and any source that fails to parse fall back gracefully to the raw definition in a `<pre class="mermaid-source">`, so content is never lost.
+
+`beautiful-mermaid` ships as a dependency of this package, so no extra install or stylesheet is required.
+
 ## Supported Blocks
 
-| Block                           | Default element     | Source                      |
-| ------------------------------- | ------------------- | --------------------------- |
-| `paragraph`                     | `<p>`               | Strapi core                 |
-| `heading` (1&ndash;6)           | `<h1>`&ndash;`<h6>` | Strapi core                 |
-| `list` (ordered/unordered/todo) | `<ol>` / `<ul>`     | Strapi core + Better Blocks |
-| `list-item`                     | `<li>`              | Strapi core                 |
-| `link`                          | `<a>`               | Strapi core                 |
-| `quote`                         | `<blockquote>`      | Strapi core                 |
-| `code`                          | `<pre><code>`       | Strapi core                 |
-| `image`                         | `<figure><img>`     | Strapi core                 |
-| `horizontal-line`               | `<hr>`              | Better Blocks               |
-| `table`                         | `<table>`           | Better Blocks               |
-| `media-embed`                   | `<iframe>` (16:9)   | Better Blocks               |
-| `math` (inline/block)           | `<span>` / `<div>`  | Better Blocks               |
+| Block                           | Default element      | Source                      |
+| ------------------------------- | -------------------- | --------------------------- |
+| `paragraph`                     | `<p>`                | Strapi core                 |
+| `heading` (1&ndash;6)           | `<h1>`&ndash;`<h6>`  | Strapi core                 |
+| `list` (ordered/unordered/todo) | `<ol>` / `<ul>`      | Strapi core + Better Blocks |
+| `list-item`                     | `<li>`               | Strapi core                 |
+| `link`                          | `<a>`                | Strapi core                 |
+| `quote`                         | `<blockquote>`       | Strapi core                 |
+| `code`                          | `<pre><code>`        | Strapi core                 |
+| `image`                         | `<figure><img>`      | Strapi core                 |
+| `horizontal-line`               | `<hr>`               | Better Blocks               |
+| `table`                         | `<table>`            | Better Blocks               |
+| `media-embed`                   | `<iframe>` (16:9)    | Better Blocks               |
+| `math` (inline/block)           | `<span>` / `<div>`   | Better Blocks               |
+| `diagram` (mermaid)             | `<div>` (inline SVG) | Better Blocks               |
 
 ### Block properties
 
@@ -149,6 +158,8 @@ import 'katex/dist/katex.min.css';
 | `originalUrl` | media-embed               | Original user-provided URL                            |
 | `format`      | math                      | `inline` (`<span>`) or `block` (`<div>`)              |
 | `value`       | math                      | LaTeX source rendered with KaTeX                      |
+| `format`      | diagram                   | `mermaid` (the only supported diagram format)         |
+| `value`       | diagram                   | Mermaid source, pre-rendered to SVG on the server     |
 
 ## Supported Modifiers
 
@@ -221,6 +232,7 @@ The props each custom block component receives:
 | `table` / `table-row` / `table-cell` / `table-header-cell` | children via `<slot />`                                       |
 | `media-embed`                                              | `{ url; originalUrl? }` (no slot)                             |
 | `math`                                                     | `{ formula; inline }` (no slot) — bring your own math engine  |
+| `diagram`                                                  | `{ code; format }` (no slot) — bring your own diagram engine  |
 
 ### Custom modifier renderers
 
@@ -271,6 +283,7 @@ import type {
   TableHeaderCellNode,
   MediaEmbedNode,
   MathNode,
+  DiagramNode,
   TextAlign,
   CustomBlocksConfig,
   CustomModifiersConfig,

@@ -4,6 +4,7 @@ import Inline from './Inline.astro';
 import List from './List.astro';
 import Table from './Table.astro';
 import Math from './Math.astro';
+import Diagram from './Diagram.astro';
 import { getBlockStyle, getPlainText } from './utils';
 
 interface Props {
@@ -154,3 +155,5 @@ const EmbedComp = blocks?.['media-embed'] as any;
 }
 
 {block.type === 'math' && <Math node={block} blocks={blocks} />}
+
+{block.type === 'diagram' && <Diagram node={block} blocks={blocks} />}
