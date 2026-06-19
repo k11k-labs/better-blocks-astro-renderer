@@ -128,6 +128,13 @@ export type MediaEmbedNode = {
   children: [{ type: 'text'; text: '' }];
 };
 
+export type DiagramNode = {
+  type: 'diagram';
+  format: 'mermaid';
+  value: string;
+  children: [{ type: 'text'; text: '' }];
+};
+
 export type BlockNode =
   | ParagraphNode
   | HeadingNode
@@ -138,7 +145,8 @@ export type BlockNode =
   | HorizontalLineNode
   | TableNode
   | MediaEmbedNode
-  | MathNode;
+  | MathNode
+  | DiagramNode;
 
 export type BlocksContent = BlockNode[];
 
@@ -176,6 +184,7 @@ export type AstroComponentFactory = (...args: any[]) => any;
  * - `table` / `table-row` / `table-cell` / `table-header-cell` — children via `<slot />`
  * - `media-embed` — `{ url: string; originalUrl?: string }`
  * - `math` — `{ formula: string; inline: boolean }`
+ * - `diagram` — `{ code: string; format: 'mermaid' }`
  */
 export type CustomBlocksConfig = Partial<{
   paragraph: AstroComponentFactory;
@@ -193,6 +202,7 @@ export type CustomBlocksConfig = Partial<{
   'table-header-cell': AstroComponentFactory;
   'media-embed': AstroComponentFactory;
   math: AstroComponentFactory;
+  diagram: AstroComponentFactory;
 }>;
 
 /**

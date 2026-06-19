@@ -16,6 +16,7 @@ import CustomTh from './fixtures/CustomTh.astro';
 import CustomTd from './fixtures/CustomTd.astro';
 import CustomImage from './fixtures/CustomImage.astro';
 import CustomMath from './fixtures/CustomMath.astro';
+import CustomDiagram from './fixtures/CustomDiagram.astro';
 import CustomBold from './fixtures/CustomBold.astro';
 import CustomColor from './fixtures/CustomColor.astro';
 import CustomBg from './fixtures/CustomBg.astro';
@@ -727,6 +728,57 @@ describe('BlocksRenderer', () => {
     expect(els[0].getAttribute('data-inline')).toBe('true');
     expect(els[1].getAttribute('data-formula')).toBe('\\sum x');
     expect(els[1].getAttribute('data-inline')).toBe('false');
+  });
+
+  // ── Diagrams (Mermaid) ───────────────────────────────────────────
+
+  it('renders a supported diagram to inline SVG on the server', async () => {
+    const { container } = await render([
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        value: 'graph TD\n  A[Start] --> B[End];',
+        children: [{ type: 'text', text: '' }],
+      },
+    ]);
+    const wrapper = container.querySelector('div.mermaid-diagram');
+    expect(wrapper).not.toBeNull();
+    expect(wrapper?.querySelector('svg')).not.toBeNull();
+    expect(container.querySelector('pre.mermaid-source')).toBeNull();
+  });
+
+  it('falls back to raw source in a <pre> for unsupported diagram types', async () => {
+    const { container } = await render([
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        value: 'gantt\n  title A\n  section S\n  Task :a1, 2024-01-01, 30d',
+        children: [{ type: 'text', text: '' }],
+      },
+    ]);
+    const pre = container.querySelector('pre.mermaid-source');
+    expect(pre).not.toBeNull();
+    expect(pre?.textContent).toContain('gantt');
+    expect(container.querySelector('div.mermaid-diagram')).toBeNull();
+  });
+
+  it('uses a custom diagram renderer with code and format props', async () => {
+    const { container } = await render(
+      [
+        {
+          type: 'diagram',
+          format: 'mermaid',
+          value: 'graph TD\n  A --> B;',
+          children: [{ type: 'text', text: '' }],
+        },
+      ],
+      { blocks: { diagram: CustomDiagram } }
+    );
+    const el = container.querySelector('.custom-diagram');
+    expect(el).not.toBeNull();
+    expect(el?.getAttribute('data-format')).toBe('mermaid');
+    expect(el?.textContent).toContain('A --> B');
+    expect(container.querySelector('div.mermaid-diagram')).toBeNull();
   });
 
   // ── Text Modifiers: uppercase, superscript, subscript ────────────

@@ -495,6 +495,32 @@
       "children": [{ "type": "text", "text": "" }]
     },
     {
+      "type": "heading",
+      "level": 2,
+      "children": [{ "type": "text", "text": "Diagrams (Mermaid)" }]
+    },
+    {
+      "type": "paragraph",
+      "children": [
+        {
+          "type": "text",
+          "text": "Mermaid diagrams are pre-rendered to SVG on the server — zero client-side JavaScript:"
+        }
+      ]
+    },
+    {
+      "type": "diagram",
+      "format": "mermaid",
+      "value": "graph TD\n  A[Write content in Strapi] --> B{Block type?}\n  B -->|diagram| C[Render to SVG on the server]\n  B -->|other| D[Render native Astro markup]\n  C --> E[Static HTML, no JS]\n  D --> E",
+      "children": [{ "type": "text", "text": "" }]
+    },
+    {
+      "type": "diagram",
+      "format": "mermaid",
+      "value": "sequenceDiagram\n  participant Astro\n  participant Renderer\n  participant Mermaid\n  Astro->>Renderer: <BlocksRenderer content={blocks} />\n  Renderer->>Mermaid: renderMermaidSVG(value)\n  Mermaid-->>Renderer: <svg>…</svg>\n  Renderer-->>Astro: inline SVG (no hydration)",
+      "children": [{ "type": "text", "text": "" }]
+    },
+    {
       "type": "paragraph",
       "children": [{ "type": "text", "text": "" }]
     },

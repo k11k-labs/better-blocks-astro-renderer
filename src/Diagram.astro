@@ -1,0 +1,40 @@
+---
+import { renderMermaidSVG } from 'beautiful-mermaid';
+import type { CustomBlocksConfig, DiagramNode } from './types';
+
+interface Props {
+  node: DiagramNode;
+  blocks?: CustomBlocksConfig;
+}
+
+const { node, blocks } = Astro.props;
+
+const source = node.value ?? '';
+const format = node.format ?? 'mermaid';
+const DiagramComp = blocks?.diagram;
+
+// beautiful-mermaid renders Mermaid to an SVG string synchronously on the
+// server — no browser, no client-side hydration. It throws on empty or invalid
+// input and on unsupported diagram types (gantt, pie, mindmap, gitGraph, …); in
+// that case we fall back to the raw source in a <pre> so content is never lost.
+let svg: string | null = null;
+if (!DiagramComp && source) {
+  try {
+    const out = renderMermaidSVG(source);
+    svg = typeof out === 'string' && out.includes('<svg') ? out : null;
+  } catch {
+    svg = null;
+  }
+}
+const Custom = DiagramComp as any;
+---
+
+{
+  Custom ? (
+    <Custom code={source} format={format} />
+  ) : svg !== null ? (
+    <div class="mermaid-diagram" set:html={svg} />
+  ) : (
+    <pre class="mermaid-source">{source}</pre>
+  )
+}
