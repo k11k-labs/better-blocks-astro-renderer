@@ -135,6 +135,15 @@ export type DiagramNode = {
   children: [{ type: 'text'; text: '' }];
 };
 
+export type CalloutVariant = 'note' | 'tip' | 'important' | 'warning' | 'caution';
+
+export type CalloutNode = {
+  type: 'callout';
+  variant: CalloutVariant;
+  title?: string;
+  children: BlockNode[];
+};
+
 export type BlockNode =
   | ParagraphNode
   | HeadingNode
@@ -146,7 +155,8 @@ export type BlockNode =
   | TableNode
   | MediaEmbedNode
   | MathNode
-  | DiagramNode;
+  | DiagramNode
+  | CalloutNode;
 
 export type BlocksContent = BlockNode[];
 
@@ -185,6 +195,7 @@ export type AstroComponentFactory = (...args: any[]) => any;
  * - `media-embed` — `{ url: string; originalUrl?: string }`
  * - `math` — `{ formula: string; inline: boolean }`
  * - `diagram` — `{ code: string; format: 'mermaid' }`
+ * - `callout` — `{ variant: CalloutVariant; title?: string }` (children via `<slot />`)
  */
 export type CustomBlocksConfig = Partial<{
   paragraph: AstroComponentFactory;
@@ -203,6 +214,7 @@ export type CustomBlocksConfig = Partial<{
   'media-embed': AstroComponentFactory;
   math: AstroComponentFactory;
   diagram: AstroComponentFactory;
+  callout: AstroComponentFactory;
 }>;
 
 /**
