@@ -17,6 +17,7 @@ import CustomTd from './fixtures/CustomTd.astro';
 import CustomImage from './fixtures/CustomImage.astro';
 import CustomMath from './fixtures/CustomMath.astro';
 import CustomDiagram from './fixtures/CustomDiagram.astro';
+import CustomCallout from './fixtures/CustomCallout.astro';
 import CustomBold from './fixtures/CustomBold.astro';
 import CustomColor from './fixtures/CustomColor.astro';
 import CustomBg from './fixtures/CustomBg.astro';
@@ -779,6 +780,56 @@ describe('BlocksRenderer', () => {
     expect(el?.getAttribute('data-format')).toBe('mermaid');
     expect(el?.textContent).toContain('A --> B');
     expect(container.querySelector('div.mermaid-diagram')).toBeNull();
+  });
+
+  // ── Callouts (Admonitions) ───────────────────────────────────────
+
+  it('renders a callout with the localized variant label and nested content', async () => {
+    const { container } = await render([
+      {
+        type: 'callout',
+        variant: 'warning',
+        children: [{ type: 'paragraph', children: [{ type: 'text', text: 'Be careful.' }] }],
+      },
+    ]);
+    const aside = container.querySelector('aside.bb-callout.bb-callout-warning');
+    expect(aside).not.toBeNull();
+    expect(aside?.getAttribute('role')).toBe('note');
+    expect(aside?.querySelector('.bb-callout-title')?.textContent).toContain('Warning');
+    expect(aside?.querySelector('svg.bb-callout-icon')).not.toBeNull();
+    expect(aside?.querySelector('.bb-callout-body p')?.textContent).toBe('Be careful.');
+  });
+
+  it('uses a custom title when provided', async () => {
+    const { container } = await render([
+      {
+        type: 'callout',
+        variant: 'tip',
+        title: 'Pro tip',
+        children: [{ type: 'paragraph', children: [{ type: 'text', text: 'x' }] }],
+      },
+    ]);
+    expect(container.querySelector('.bb-callout-title')?.textContent).toContain('Pro tip');
+  });
+
+  it('uses a custom callout renderer with variant, title and children', async () => {
+    const { container } = await render(
+      [
+        {
+          type: 'callout',
+          variant: 'important',
+          title: 'Heads up',
+          children: [{ type: 'paragraph', children: [{ type: 'text', text: 'Body' }] }],
+        },
+      ],
+      { blocks: { callout: CustomCallout } }
+    );
+    const el = container.querySelector('.custom-callout');
+    expect(el).not.toBeNull();
+    expect(el?.getAttribute('data-variant')).toBe('important');
+    expect(el?.getAttribute('data-title')).toBe('Heads up');
+    expect(el?.textContent).toContain('Body');
+    expect(container.querySelector('aside.bb-callout')).toBeNull();
   });
 
   // ── Text Modifiers: uppercase, superscript, subscript ────────────

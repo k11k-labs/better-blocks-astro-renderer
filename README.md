@@ -122,6 +122,31 @@ Supported diagram types — **flowchart, sequence, state, class, ER, and xychart
 
 `beautiful-mermaid` ships as a dependency of this package, so no extra install or stylesheet is required.
 
+### Callouts (Admonitions)
+
+Block-level `callout` nodes render GitHub-style alerts in five variants &mdash; `note`, `tip`, `important`, `warning`, and `caution`. Each renders as an `<aside role="note">` with a colored left border, a title row (icon + label), and the nested block children (paragraphs, lists, links, etc.). If a `title` is set on the node it is used; otherwise the localized variant label is shown.
+
+Colors come from a small **scoped `<style>`** that ships with the component (still zero client-side JavaScript), and the default palette **adapts to dark mode automatically** via `@media (prefers-color-scheme: dark)`. The accent for each variant is driven by a `--bb-callout-accent` custom property on the `.bb-callout-{variant}` element, so you can retheme colors from your own CSS without replacing the markup:
+
+```css
+/* Recolor a single variant, or override per color scheme */
+.bb-callout-note {
+  --bb-callout-accent: #2563eb;
+}
+```
+
+To replace the markup entirely, override the `callout` block. It receives `variant` and `title`; the nested children arrive via `<slot />`:
+
+```astro
+---
+import { BlocksRenderer } from '@k11k/better-blocks-astro-renderer';
+import MyCallout from '../components/MyCallout.astro';
+const { blocks } = Astro.props;
+---
+
+<BlocksRenderer content={blocks} blocks={{ callout: MyCallout }} />
+```
+
 ## Supported Blocks
 
 | Block                           | Default element      | Source                      |
@@ -139,6 +164,7 @@ Supported diagram types — **flowchart, sequence, state, class, ER, and xychart
 | `media-embed`                   | `<iframe>` (16:9)    | Better Blocks               |
 | `math` (inline/block)           | `<span>` / `<div>`   | Better Blocks               |
 | `diagram` (mermaid)             | `<div>` (inline SVG) | Better Blocks               |
+| `callout` (admonition)          | `<aside>`            | Better Blocks               |
 
 ### Block properties
 

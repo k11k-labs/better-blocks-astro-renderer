@@ -1,6 +1,7 @@
 ---
 import { BlocksRenderer, type BlocksContent } from '@k11k/better-blocks-astro-renderer';
 import 'katex/dist/katex.min.css';
+import CustomCallout from '../components/CustomCallout.astro';
 
 interface Article {
   id: number;
@@ -63,11 +64,34 @@ try {
       }
 
       {
-        articles.map((article) => (
-          <article style="margin-bottom: 48px; border-bottom: 1px solid #eee; padding-bottom: 24px;">
-            <BlocksRenderer content={article.content} />
-          </article>
-        ))
+        articles.map((article) => {
+          // Pull just the callout blocks so the custom-renderer demo below is
+          // focused on callouts (not a second copy of the whole article).
+          const callouts = article.content.filter((block) => block.type === 'callout');
+
+          return (
+            <article style="margin-bottom: 48px; border-bottom: 1px solid #eee; padding-bottom: 24px;">
+              <h2 style="color: #888; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em;">
+                ① Default rendering — callouts are GitHub-style
+              </h2>
+              <BlocksRenderer content={article.content} />
+
+              {callouts.length > 0 && (
+                <section style="margin-top: 40px; padding-top: 16px; border-top: 2px dashed #d7c7ff;">
+                  <h2 style="color: #7c3aed; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em;">
+                    ② Custom callout renderer — same callouts via the <code>blocks</code> override
+                  </h2>
+                  <p style="color: #666; font-size: 14px; margin-top: 0;">
+                    The callouts below are the exact same content as above, re-rendered with a
+                    custom <code>callout</code> component (purple boxes with emoji) instead of the
+                    built-in GitHub-style default.
+                  </p>
+                  <BlocksRenderer content={callouts} blocks={{ callout: CustomCallout }} />
+                </section>
+              )}
+            </article>
+          );
+        })
       }
     </div>
   </body>
