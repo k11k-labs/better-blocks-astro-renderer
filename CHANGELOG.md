@@ -1,5 +1,11 @@
 # @k11k/better-blocks-astro-renderer
 
+## 0.3.0
+
+### Minor Changes
+
+- [`7824386`](https://github.com/k11k-labs/better-blocks-astro-renderer/commit/78243868013d4dce2dff08a7fa551b4b716ecabf) Thanks [@kkukielka](https://github.com/kkukielka)! - Add support for block-level Mermaid `diagram` nodes from the Better Blocks plugin (`{ type: 'diagram', format: 'mermaid', value }`). Diagrams are pre-rendered to inline SVG on the server with `beautiful-mermaid`, so the output is static HTML with **zero client-side JavaScript** — no browser, no hydration, no Chromium download. Supported diagram types (flowchart, sequence, state, class, ER, xychart) render to `<div class="mermaid-diagram">`; unsupported types and parse errors fall back to the raw source in `<pre class="mermaid-source">` so content is never lost. The block can be overridden with a custom `diagram` renderer that receives `code` and `format` props.
+
 ## 0.2.0
 
 ### Minor Changes
