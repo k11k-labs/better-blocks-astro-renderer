@@ -1,0 +1,45 @@
+---
+import type { CustomBlocksConfig, CustomModifiersConfig, TableNode } from './types';
+import Inline from './Inline.astro';
+
+interface Props {
+  node: TableNode;
+  blocks?: CustomBlocksConfig;
+  modifiers?: CustomModifiersConfig;
+}
+
+const { node, blocks, modifiers } = Astro.props;
+const TableComp = blocks?.table as any;
+const RowComp = blocks?.['table-row'] as any;
+const CellComp = blocks?.['table-cell'] as any;
+const HeaderCellComp = blocks?.['table-header-cell'] as any;
+---
+
+{
+  (() => {
+    const rows = node.children.map((row) => {
+      const cells = row.children.map((cell) => {
+        const isHeader = cell.type === 'table-header-cell';
+        const content = <Inline nodes={cell.children} blocks={blocks} modifiers={modifiers} />;
+
+        if (isHeader && HeaderCellComp) {
+          return <HeaderCellComp>{content}</HeaderCellComp>;
+        }
+        if (!isHeader && CellComp) {
+          return <CellComp>{content}</CellComp>;
+        }
+        const CellTag = isHeader ? 'th' : 'td';
+        return <CellTag>{content}</CellTag>;
+      });
+      return RowComp ? <RowComp>{cells}</RowComp> : <tr>{cells}</tr>;
+    });
+
+    return TableComp ? (
+      <TableComp>{rows}</TableComp>
+    ) : (
+      <table>
+        <tbody>{rows}</tbody>
+      </table>
+    );
+  })()
+}
