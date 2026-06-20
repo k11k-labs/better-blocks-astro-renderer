@@ -16,7 +16,7 @@ interface Props {
 const { node, blocks, modifiers } = Astro.props;
 
 // GitHub-style alert metadata: default label and octicon path. Accent colors
-// live in the scoped <style> below so they can adapt to dark mode.
+// live in the scoped <style> below (GitHub light palette, matching the React renderer).
 const VARIANTS: Record<CalloutVariant, { label: string; icon: string }> = {
   note: {
     label: 'Note',
@@ -73,6 +73,8 @@ const CalloutComp = blocks?.callout as any;
 <style>
   .bb-callout {
     border-left: 0.25rem solid var(--bb-callout-accent, #0969da);
+    /* Subtle accent-tinted background (~8% opacity) to match the editor preview. */
+    background-color: color-mix(in srgb, var(--bb-callout-accent, #0969da) 8%, transparent);
     padding: 0.5rem 1rem;
     margin: 1rem 0;
   }
@@ -80,9 +82,13 @@ const CalloutComp = blocks?.callout as any;
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin: 0 0 0.25rem;
+    /* GitHub spacing: tight title line with a 1rem gap before the body. */
+    line-height: 1;
+    margin: 0 0 1rem;
     font-weight: 600;
-    color: var(--bb-callout-accent, #0969da);
+    /* GitHub's caution variant uses a slightly different title color than its
+       accent/border, so allow an optional per-variant title override. */
+    color: var(--bb-callout-title-color, var(--bb-callout-accent, #0969da));
   }
   .bb-callout-icon {
     width: 16px;
@@ -90,14 +96,18 @@ const CalloutComp = blocks?.callout as any;
     flex: none;
     fill: currentColor;
   }
-  .bb-callout-body > :first-child {
+  /* Collapse the body's outer margins so the content sits flush within the
+     callout padding (top/bottom balanced). :global is required because the body
+     blocks are rendered by other components and don't carry this component's
+     scoped id, so a plain scoped selector would never match them. */
+  .bb-callout-body > :global(:first-child) {
     margin-top: 0;
   }
-  .bb-callout-body > :last-child {
+  .bb-callout-body > :global(:last-child) {
     margin-bottom: 0;
   }
 
-  /* Light-mode accents (GitHub palette) */
+  /* Accent colors (GitHub light palette) — matches the React renderer. */
   .bb-callout-note {
     --bb-callout-accent: #0969da;
   }
@@ -112,24 +122,6 @@ const CalloutComp = blocks?.callout as any;
   }
   .bb-callout-caution {
     --bb-callout-accent: #cf222e;
-  }
-
-  /* Dark-mode accents adapt automatically */
-  @media (prefers-color-scheme: dark) {
-    .bb-callout-note {
-      --bb-callout-accent: #4493f8;
-    }
-    .bb-callout-tip {
-      --bb-callout-accent: #3fb950;
-    }
-    .bb-callout-important {
-      --bb-callout-accent: #ab7df8;
-    }
-    .bb-callout-warning {
-      --bb-callout-accent: #d29922;
-    }
-    .bb-callout-caution {
-      --bb-callout-accent: #f85149;
-    }
+    --bb-callout-title-color: #d1242f;
   }
 </style>
