@@ -4,6 +4,7 @@ import type {
   CalloutVariant,
   CustomBlocksConfig,
   CustomModifiersConfig,
+  DiagramTheme,
 } from './types';
 import Block from './Block.astro';
 
@@ -11,9 +12,10 @@ interface Props {
   node: CalloutNode;
   blocks?: CustomBlocksConfig;
   modifiers?: CustomModifiersConfig;
+  diagramTheme?: DiagramTheme;
 }
 
-const { node, blocks, modifiers } = Astro.props;
+const { node, blocks, modifiers, diagramTheme } = Astro.props;
 
 // GitHub-style alert metadata: default label and octicon path. Accent colors
 // live in the scoped <style> below (GitHub light palette, matching the React renderer).
@@ -50,7 +52,7 @@ const CalloutComp = blocks?.callout as any;
   CalloutComp ? (
     <CalloutComp variant={variant} title={node.title}>
       {node.children.map((child) => (
-        <Block block={child} blocks={blocks} modifiers={modifiers} />
+        <Block block={child} blocks={blocks} modifiers={modifiers} diagramTheme={diagramTheme} />
       ))}
     </CalloutComp>
   ) : (
@@ -63,7 +65,7 @@ const CalloutComp = blocks?.callout as any;
       </p>
       <div class="bb-callout-body">
         {node.children.map((child) => (
-          <Block block={child} blocks={blocks} modifiers={modifiers} />
+          <Block block={child} blocks={blocks} modifiers={modifiers} diagramTheme={diagramTheme} />
         ))}
       </div>
     </aside>

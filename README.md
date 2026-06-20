@@ -122,6 +122,25 @@ Supported diagram types — **flowchart, sequence, state, class, ER, and xychart
 
 `beautiful-mermaid` ships as a dependency of this package, so no extra install or stylesheet is required.
 
+#### Diagram colors
+
+Diagrams render **in color** by default, with a palette that mirrors mermaid.js's familiar look (lavender node fills, purple borders, dark edges). Pass `diagramTheme` to pick a built-in palette (`github-light`, `github-dark`, `dracula`, `nord`, `tokyo-night`, `catppuccin-mocha`, `solarized-light`, …) or a custom color object (`{ bg, fg, line, accent, muted, surface, border }`):
+
+```astro
+---
+import { BlocksRenderer } from '@k11k/better-blocks-astro-renderer';
+const { blocks } = Astro.props;
+---
+
+<!-- built-in theme -->
+<BlocksRenderer content={blocks} diagramTheme="github-dark" />
+
+<!-- or a custom palette -->
+<BlocksRenderer content={blocks} diagramTheme={{ bg: '#fff', fg: '#1f2328', accent: '#8250df' }} />
+```
+
+> `beautiful-mermaid` derives a clean, single-accent palette from these colors — it is intentionally minimal, not a 1:1 clone of mermaid.js's multi-color default theme. To take full control of the markup (e.g. to render with the real mermaid.js on the client), override the `diagram` block via `blocks.diagram`.
+
 ### Callouts (Admonitions)
 
 Block-level `callout` nodes render GitHub-style alerts in five variants &mdash; `note`, `tip`, `important`, `warning`, and `caution`. Each renders as an `<aside role="note">` with a colored left border, a title row (icon + label), and the nested block children (paragraphs, lists, links, etc.). If a `title` is set on the node it is used; otherwise the localized variant label is shown.

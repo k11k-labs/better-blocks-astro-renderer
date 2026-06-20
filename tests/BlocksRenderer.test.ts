@@ -3,7 +3,12 @@ import { parseHTML } from 'linkedom';
 import { describe, it, expect, beforeAll } from 'vitest';
 
 import BlocksRenderer from '../src/BlocksRenderer.astro';
-import type { BlocksContent, CustomBlocksConfig, CustomModifiersConfig } from '../src/types';
+import type {
+  BlocksContent,
+  CustomBlocksConfig,
+  CustomModifiersConfig,
+  DiagramTheme,
+} from '../src/types';
 
 import CustomParagraph from './fixtures/CustomParagraph.astro';
 import CustomHeading from './fixtures/CustomHeading.astro';
@@ -29,7 +34,11 @@ beforeAll(async () => {
   container = await AstroContainer.create();
 });
 
-type RenderProps = { blocks?: CustomBlocksConfig; modifiers?: CustomModifiersConfig };
+type RenderProps = {
+  blocks?: CustomBlocksConfig;
+  modifiers?: CustomModifiersConfig;
+  diagramTheme?: DiagramTheme;
+};
 
 async function render(content: BlocksContent | null, props: RenderProps = {}) {
   const raw = await container.renderToString(BlocksRenderer, {
@@ -747,6 +756,55 @@ describe('BlocksRenderer', () => {
     expect(wrapper).not.toBeNull();
     expect(wrapper?.querySelector('svg')).not.toBeNull();
     expect(container.querySelector('pre.mermaid-source')).toBeNull();
+  });
+
+  it('renders diagrams in color with a mermaid.js-like palette by default', async () => {
+    const { container } = await render([
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        value: 'graph TD\n  A[Start] --> B[End];',
+        children: [{ type: 'text', text: '' }],
+      },
+    ]);
+    // Without a palette beautiful-mermaid renders monochrome (only fg/bg). The
+    // default mirrors mermaid.js: lavender node fill + purple border, so nodes —
+    // not just arrows — are colored.
+    const html = container.querySelector('div.mermaid-diagram')?.innerHTML.toLowerCase() ?? '';
+    expect(html).toContain('#ececff');
+    expect(html).toContain('#9370db');
+  });
+
+  it('applies a built-in diagram theme by name', async () => {
+    const { container } = await render(
+      [
+        {
+          type: 'diagram',
+          format: 'mermaid',
+          value: 'graph TD\n  A[Start] --> B[End];',
+          children: [{ type: 'text', text: '' }],
+        },
+      ],
+      { diagramTheme: 'dracula' }
+    );
+    const html = container.querySelector('div.mermaid-diagram')?.innerHTML ?? '';
+    expect(html.toLowerCase()).toContain('#bd93f9');
+  });
+
+  it('applies a custom diagram color palette object', async () => {
+    const { container } = await render(
+      [
+        {
+          type: 'diagram',
+          format: 'mermaid',
+          value: 'graph TD\n  A[Start] --> B[End];',
+          children: [{ type: 'text', text: '' }],
+        },
+      ],
+      { diagramTheme: { bg: '#ffffff', fg: '#222222', accent: '#ff0000' } }
+    );
+    const html = container.querySelector('div.mermaid-diagram')?.innerHTML ?? '';
+    expect(html.toLowerCase()).toContain('#ff0000');
   });
 
   it('falls back to raw source in a <pre> for unsupported diagram types', async () => {

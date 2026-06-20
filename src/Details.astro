@@ -1,14 +1,15 @@
 ---
-import type { DetailsNode, CustomBlocksConfig, CustomModifiersConfig } from './types';
+import type { DetailsNode, CustomBlocksConfig, CustomModifiersConfig, DiagramTheme } from './types';
 import Block from './Block.astro';
 
 interface Props {
   node: DetailsNode;
   blocks?: CustomBlocksConfig;
   modifiers?: CustomModifiersConfig;
+  diagramTheme?: DiagramTheme;
 }
 
-const { node, blocks, modifiers } = Astro.props;
+const { node, blocks, modifiers, diagramTheme } = Astro.props;
 
 const DetailsComp = blocks?.details as any;
 ---
@@ -17,7 +18,7 @@ const DetailsComp = blocks?.details as any;
   DetailsComp ? (
     <DetailsComp summary={node.summary} defaultOpen={node.defaultOpen}>
       {node.children.map((child) => (
-        <Block block={child} blocks={blocks} modifiers={modifiers} />
+        <Block block={child} blocks={blocks} modifiers={modifiers} diagramTheme={diagramTheme} />
       ))}
     </DetailsComp>
   ) : (
@@ -25,7 +26,7 @@ const DetailsComp = blocks?.details as any;
       <summary class="bb-details-summary">{node.summary}</summary>
       <div class="bb-details-body">
         {node.children.map((child) => (
-          <Block block={child} blocks={blocks} modifiers={modifiers} />
+          <Block block={child} blocks={blocks} modifiers={modifiers} diagramTheme={diagramTheme} />
         ))}
       </div>
     </details>
