@@ -18,6 +18,7 @@ import CustomImage from './fixtures/CustomImage.astro';
 import CustomMath from './fixtures/CustomMath.astro';
 import CustomDiagram from './fixtures/CustomDiagram.astro';
 import CustomCallout from './fixtures/CustomCallout.astro';
+import CustomDetails from './fixtures/CustomDetails.astro';
 import CustomBold from './fixtures/CustomBold.astro';
 import CustomColor from './fixtures/CustomColor.astro';
 import CustomBg from './fixtures/CustomBg.astro';
@@ -830,6 +831,79 @@ describe('BlocksRenderer', () => {
     expect(el?.getAttribute('data-title')).toBe('Heads up');
     expect(el?.textContent).toContain('Body');
     expect(container.querySelector('aside.bb-callout')).toBeNull();
+  });
+
+  // ── Details / Summary (Collapsible) ──────────────────────────────
+
+  it('renders a details block with a summary and nested content', async () => {
+    const { container } = await render([
+      {
+        type: 'details',
+        summary: 'Click to expand',
+        children: [{ type: 'paragraph', children: [{ type: 'text', text: 'Hidden content.' }] }],
+      },
+    ]);
+    const details = container.querySelector('details.bb-details');
+    expect(details).not.toBeNull();
+    // Closed by default when defaultOpen is omitted
+    expect(details?.hasAttribute('open')).toBe(false);
+    const summary = details?.querySelector('summary.bb-details-summary');
+    expect(summary?.textContent).toBe('Click to expand');
+    // Block children are rendered recursively inside the details
+    expect(details?.querySelector('p')?.textContent).toBe('Hidden content.');
+  });
+
+  it('honors defaultOpen via the open attribute', async () => {
+    const { container } = await render([
+      {
+        type: 'details',
+        summary: 'Already open',
+        defaultOpen: true,
+        children: [{ type: 'paragraph', children: [{ type: 'text', text: 'Visible.' }] }],
+      },
+    ]);
+    expect(container.querySelector('details.bb-details')?.hasAttribute('open')).toBe(true);
+  });
+
+  it('supports arbitrarily nested details blocks', async () => {
+    const { container } = await render([
+      {
+        type: 'details',
+        summary: 'Outer',
+        children: [
+          {
+            type: 'details',
+            summary: 'Inner',
+            children: [{ type: 'paragraph', children: [{ type: 'text', text: 'Deep.' }] }],
+          },
+        ],
+      },
+    ]);
+    const outer = container.querySelector('details.bb-details');
+    const inner = outer?.querySelector('details.bb-details');
+    expect(inner).not.toBeNull();
+    expect(inner?.querySelector('summary')?.textContent).toBe('Inner');
+    expect(inner?.querySelector('p')?.textContent).toBe('Deep.');
+  });
+
+  it('uses a custom details renderer with summary, defaultOpen and children', async () => {
+    const { container } = await render(
+      [
+        {
+          type: 'details',
+          summary: 'More info',
+          defaultOpen: true,
+          children: [{ type: 'paragraph', children: [{ type: 'text', text: 'Body' }] }],
+        },
+      ],
+      { blocks: { details: CustomDetails } }
+    );
+    const el = container.querySelector('details.custom-details');
+    expect(el).not.toBeNull();
+    expect(el?.getAttribute('data-summary')).toBe('More info');
+    expect(el?.hasAttribute('open')).toBe(true);
+    expect(el?.textContent).toContain('Body');
+    expect(container.querySelector('details.bb-details')).toBeNull();
   });
 
   // ── Text Modifiers: uppercase, superscript, subscript ────────────
