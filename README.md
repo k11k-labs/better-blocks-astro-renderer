@@ -124,7 +124,7 @@ Supported diagram types — **flowchart, sequence, state, class, ER, and xychart
 
 #### Diagram colors
 
-Diagrams render **in color** using the `github-light` theme by default. Pass `diagramTheme` to pick a different built-in palette (`github-dark`, `dracula`, `nord`, `tokyo-night`, `catppuccin-mocha`, `solarized-light`, …) or a custom color object (`{ bg, fg, line, accent, muted, surface, border }`):
+Diagrams render **in color** by default, with a palette that mirrors mermaid.js's familiar look (lavender node fills, purple borders, dark edges). Pass `diagramTheme` to pick a built-in palette (`github-light`, `github-dark`, `dracula`, `nord`, `tokyo-night`, `catppuccin-mocha`, `solarized-light`, …) or a custom color object (`{ bg, fg, line, accent, muted, surface, border }`):
 
 ```astro
 ---

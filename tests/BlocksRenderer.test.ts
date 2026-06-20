@@ -758,7 +758,7 @@ describe('BlocksRenderer', () => {
     expect(container.querySelector('pre.mermaid-source')).toBeNull();
   });
 
-  it('renders diagrams in color using the github-light theme by default', async () => {
+  it('renders diagrams in color with a mermaid.js-like palette by default', async () => {
     const { container } = await render([
       {
         type: 'diagram',
@@ -767,10 +767,12 @@ describe('BlocksRenderer', () => {
         children: [{ type: 'text', text: '' }],
       },
     ]);
-    // Without a theme beautiful-mermaid renders monochrome (only fg/bg). The
-    // github-light default injects its accent color, so the SVG is colorful.
-    const html = container.querySelector('div.mermaid-diagram')?.innerHTML ?? '';
-    expect(html.toLowerCase()).toContain('#0969da');
+    // Without a palette beautiful-mermaid renders monochrome (only fg/bg). The
+    // default mirrors mermaid.js: lavender node fill + purple border, so nodes —
+    // not just arrows — are colored.
+    const html = container.querySelector('div.mermaid-diagram')?.innerHTML.toLowerCase() ?? '';
+    expect(html).toContain('#ececff');
+    expect(html).toContain('#9370db');
   });
 
   it('applies a built-in diagram theme by name', async () => {
