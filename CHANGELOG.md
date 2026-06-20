@@ -1,5 +1,11 @@
 # @k11k/better-blocks-astro-renderer
 
+## 0.5.1
+
+### Patch Changes
+
+- [#16](https://github.com/k11k-labs/better-blocks-astro-renderer/pull/16) [`d61c771`](https://github.com/k11k-labs/better-blocks-astro-renderer/commit/d61c77174d9534a12b3c0dcaf53c081d7d8af3c4) Thanks [@kkukielka](https://github.com/kkukielka)! - Render Mermaid diagrams in color. Previously diagrams were passed to `beautiful-mermaid` with no palette, so every color was derived from a single dark foreground and the output looked monochrome. They now default to a palette that mirrors mermaid.js's familiar look (lavender node fills, purple borders, dark edges), and a new `diagramTheme` prop on `BlocksRenderer` accepts either a built-in theme name (`github-light`, `github-dark`, `dracula`, `nord`, `tokyo-night`, …) or a custom color object (`{ bg, fg, line, accent, muted, surface, border }`). The theme also propagates to diagrams nested inside `callout` and `details` blocks.
+
 ## 0.5.0
 
 ### Minor Changes
