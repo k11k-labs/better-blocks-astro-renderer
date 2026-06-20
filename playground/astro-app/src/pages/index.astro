@@ -2,6 +2,7 @@
 import { BlocksRenderer, type BlocksContent } from '@k11k/better-blocks-astro-renderer';
 import 'katex/dist/katex.min.css';
 import CustomCallout from '../components/CustomCallout.astro';
+import CustomDetails from '../components/CustomDetails.astro';
 
 interface Article {
   id: number;
@@ -68,6 +69,7 @@ try {
           // Pull just the callout blocks so the custom-renderer demo below is
           // focused on callouts (not a second copy of the whole article).
           const callouts = article.content.filter((block) => block.type === 'callout');
+          const details = article.content.filter((block) => block.type === 'details');
 
           return (
             <article style="margin-bottom: 48px; border-bottom: 1px solid #eee; padding-bottom: 24px;">
@@ -87,6 +89,29 @@ try {
                     built-in GitHub-style default.
                   </p>
                   <BlocksRenderer content={callouts} blocks={{ callout: CustomCallout }} />
+                </section>
+              )}
+
+              {details.length > 0 && (
+                <section style="margin-top: 40px; padding-top: 16px; border-top: 2px dashed #d0d7de;">
+                  <h2 style="color: #57606a; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em;">
+                    ③ Default details — GitHub-style markup shipped by the renderer
+                  </h2>
+                  <p style="color: #666; font-size: 14px; margin-top: 0;">
+                    The same details blocks as above, rendered with the built-in
+                    <code>bb-details</code> markup and its scoped GitHub-inspired stylesheet — a
+                    native <code>&lt;details&gt;</code> disclosure with zero client-side JavaScript.
+                  </p>
+                  <BlocksRenderer content={details} />
+
+                  <h2 style="color: #7c3aed; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 32px;">
+                    ④ Custom details renderer — same details via the <code>blocks</code> override
+                  </h2>
+                  <p style="color: #666; font-size: 14px; margin-top: 0;">
+                    The same details blocks re-rendered with a custom <code>details</code> component
+                    (purple box, emoji marker) instead of the built-in default.
+                  </p>
+                  <BlocksRenderer content={details} blocks={{ details: CustomDetails }} />
                 </section>
               )}
             </article>

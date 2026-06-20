@@ -147,6 +147,31 @@ const { blocks } = Astro.props;
 <BlocksRenderer content={blocks} blocks={{ callout: MyCallout }} />
 ```
 
+### Details / Summary (Collapsible)
+
+Block-level `details` nodes render a native, keyboard-accessible `<details>` / `<summary>` disclosure with **zero client-side JavaScript** &mdash; the open/closed state is handled entirely by the browser. The `summary` field is the plain-text label, the optional `defaultOpen` boolean maps to the HTML `open` attribute (honored on initial render so screen readers get the correct state), and `children` are block-level content (paragraphs, lists, tables, images, and nested `details`) rendered after the summary. The default markup carries stable `bb-details` and `bb-details-summary` classes.
+
+A small **scoped `<style>`** ships with the component (still zero client-side JavaScript): a GitHub-inspired card with a rotating disclosure marker. Retheme it from your own CSS via the `--bb-details-*` custom properties (`--bb-details-border`, `--bb-details-bg`, `--bb-details-summary-bg`, `--bb-details-marker`) without replacing the markup:
+
+```css
+.bb-details {
+  --bb-details-border: #c8c8c8;
+  --bb-details-summary-bg: #eee;
+}
+```
+
+To replace the markup entirely, override the `details` block. It receives `summary` and `defaultOpen`; the nested children arrive via `<slot />`:
+
+```astro
+---
+import { BlocksRenderer } from '@k11k/better-blocks-astro-renderer';
+import MyDetails from '../components/MyDetails.astro';
+const { blocks } = Astro.props;
+---
+
+<BlocksRenderer content={blocks} blocks={{ details: MyDetails }} />
+```
+
 ## Supported Blocks
 
 | Block                           | Default element      | Source                      |
@@ -165,6 +190,7 @@ const { blocks } = Astro.props;
 | `math` (inline/block)           | `<span>` / `<div>`   | Better Blocks               |
 | `diagram` (mermaid)             | `<div>` (inline SVG) | Better Blocks               |
 | `callout` (admonition)          | `<aside>`            | Better Blocks               |
+| `details` (collapsible)         | `<details>`          | Better Blocks               |
 
 ### Block properties
 
@@ -186,6 +212,8 @@ const { blocks } = Astro.props;
 | `value`       | math                      | LaTeX source rendered with KaTeX                      |
 | `format`      | diagram                   | `mermaid` (the only supported diagram format)         |
 | `value`       | diagram                   | Mermaid source, pre-rendered to SVG on the server     |
+| `summary`     | details                   | Plain-text label for the `<summary>`                  |
+| `defaultOpen` | details                   | Open on initial render (HTML `open` attribute)        |
 
 ## Supported Modifiers
 
