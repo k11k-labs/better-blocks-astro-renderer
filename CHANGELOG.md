@@ -1,5 +1,11 @@
 # @k11k/better-blocks-astro-renderer
 
+## 0.4.1
+
+### Patch Changes
+
+- [`e242e0a`](https://github.com/k11k-labs/better-blocks-astro-renderer/commit/e242e0a8daee451420bf675cb0f7a6c53f73d870) Thanks [@kkukielka](https://github.com/kkukielka)! - Fix bottom-heavy callout spacing and align callout styling with GitHub's light alert palette. The body's outer margins now collapse correctly (the scoped `:first-child`/`:last-child` rules are applied via `:global()` so they reach the cross-component body blocks), an ~8% accent-tinted background is added to match the editor preview, and the title spacing and per-variant colors match GitHub's official tokens.
+
 ## 0.4.0
 
 ### Minor Changes
