@@ -7,6 +7,7 @@ import Math from './Math.astro';
 import Diagram from './Diagram.astro';
 import Callout from './Callout.astro';
 import Details from './Details.astro';
+import Button from './Button.astro';
 import { getBlockStyle, getPlainText } from './utils';
 
 interface Props {
@@ -172,3 +173,5 @@ const EmbedComp = blocks?.['media-embed'] as any;
     <Details node={block} blocks={blocks} modifiers={modifiers} diagramTheme={diagramTheme} />
   )
 }
+
+{block.type === 'button' && <Button node={block} blocks={blocks} />}

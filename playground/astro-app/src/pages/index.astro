@@ -3,6 +3,7 @@ import { BlocksRenderer, type BlocksContent } from '@k11k/better-blocks-astro-re
 import 'katex/dist/katex.min.css';
 import CustomCallout from '../components/CustomCallout.astro';
 import CustomDetails from '../components/CustomDetails.astro';
+import CustomButton from '../components/CustomButton.astro';
 
 interface Article {
   id: number;
@@ -70,6 +71,7 @@ try {
           // focused on callouts (not a second copy of the whole article).
           const callouts = article.content.filter((block) => block.type === 'callout');
           const details = article.content.filter((block) => block.type === 'details');
+          const buttons = article.content.filter((block) => block.type === 'button');
 
           return (
             <article style="margin-bottom: 48px; border-bottom: 1px solid #eee; padding-bottom: 24px;">
@@ -112,6 +114,30 @@ try {
                     (purple box, emoji marker) instead of the built-in default.
                   </p>
                   <BlocksRenderer content={details} blocks={{ details: CustomDetails }} />
+                </section>
+              )}
+
+              {buttons.length > 0 && (
+                <section style="margin-top: 40px; padding-top: 16px; border-top: 2px dashed #c7d2fe;">
+                  <h2 style="color: #4945ff; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em;">
+                    ⑤ Buttons — default rendering (inline styles + hover via CSS variables)
+                  </h2>
+                  <p style="color: #666; font-size: 14px; margin-top: 0;">
+                    The same buttons as in the article above. Hover them — the
+                    <code>hoverBackgroundColor</code> / <code>hoverTextColor</code> from the block
+                    are exposed as CSS custom properties and wired up by the renderer's scoped
+                    stylesheet (zero client-side JavaScript). The file button downloads a real asset.
+                  </p>
+                  <BlocksRenderer content={buttons} />
+
+                  <h2 style="color: #7c3aed; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 32px;">
+                    ⑥ Custom button renderer — same buttons via the <code>blocks</code> override
+                  </h2>
+                  <p style="color: #666; font-size: 14px; margin-top: 0;">
+                    The same buttons re-rendered with a custom <code>button</code> component
+                    (pill-shaped gradient CTA) instead of the built-in default.
+                  </p>
+                  <BlocksRenderer content={buttons} blocks={{ button: CustomButton }} />
                 </section>
               )}
             </article>
