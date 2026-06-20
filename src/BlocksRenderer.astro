@@ -4,8 +4,13 @@ import Block from './Block.astro';
 
 type Props = BlocksRendererProps;
 
-const { content, blocks, modifiers } = Astro.props;
+const { content, blocks, modifiers, diagramTheme } = Astro.props;
 const isValid = Array.isArray(content) && content.length > 0;
 ---
 
-{isValid && content.map((block) => <Block block={block} blocks={blocks} modifiers={modifiers} />)}
+{
+  isValid &&
+    content.map((block) => (
+      <Block block={block} blocks={blocks} modifiers={modifiers} diagramTheme={diagramTheme} />
+    ))
+}

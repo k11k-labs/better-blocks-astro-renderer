@@ -1,5 +1,5 @@
 ---
-import type { BlockNode, CustomBlocksConfig, CustomModifiersConfig } from './types';
+import type { BlockNode, CustomBlocksConfig, CustomModifiersConfig, DiagramTheme } from './types';
 import Inline from './Inline.astro';
 import List from './List.astro';
 import Table from './Table.astro';
@@ -13,9 +13,10 @@ interface Props {
   block: BlockNode;
   blocks?: CustomBlocksConfig;
   modifiers?: CustomModifiersConfig;
+  diagramTheme?: DiagramTheme;
 }
 
-const { block, blocks, modifiers } = Astro.props;
+const { block, blocks, modifiers, diagramTheme } = Astro.props;
 
 const ParagraphComp = blocks?.paragraph as any;
 const HeadingComp = blocks?.heading as any;
@@ -158,8 +159,16 @@ const EmbedComp = blocks?.['media-embed'] as any;
 
 {block.type === 'math' && <Math node={block} blocks={blocks} />}
 
-{block.type === 'diagram' && <Diagram node={block} blocks={blocks} />}
+{block.type === 'diagram' && <Diagram node={block} blocks={blocks} diagramTheme={diagramTheme} />}
 
-{block.type === 'callout' && <Callout node={block} blocks={blocks} modifiers={modifiers} />}
+{
+  block.type === 'callout' && (
+    <Callout node={block} blocks={blocks} modifiers={modifiers} diagramTheme={diagramTheme} />
+  )
+}
 
-{block.type === 'details' && <Details node={block} blocks={blocks} modifiers={modifiers} />}
+{
+  block.type === 'details' && (
+    <Details node={block} blocks={blocks} modifiers={modifiers} diagramTheme={diagramTheme} />
+  )
+}
