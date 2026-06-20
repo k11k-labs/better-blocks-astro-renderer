@@ -198,6 +198,51 @@ export type DetailsNode = {
   children: BlockNode[];
 };
 
+// ── Button (CTA / File Download) ─────────────────────────────────────
+
+export type ButtonAlignment = 'left' | 'center' | 'right' | 'none';
+
+export type ButtonLink = {
+  url: string;
+  target?: '_self' | '_blank' | '_parent' | '_top';
+  rel?: string;
+  ariaLabel?: string;
+};
+
+export type ButtonFile = {
+  id?: number;
+  url: string;
+  name: string;
+  size?: number;
+  ext?: string;
+  mime?: string;
+};
+
+export type ButtonStyle = {
+  backgroundColor?: string;
+  textColor?: string;
+  borderRadius?: string;
+  fontSize?: string;
+  fontWeight?: string;
+  padding?: string;
+  border?: string;
+  hoverBackgroundColor?: string;
+  hoverTextColor?: string;
+};
+
+export type ButtonElement = {
+  type: 'button';
+  buttonType: 'link' | 'file';
+  label: string;
+  alignment?: ButtonAlignment;
+  link?: ButtonLink;
+  file?: ButtonFile;
+  showFileSize?: boolean;
+  showFileIcon?: boolean;
+  style?: ButtonStyle;
+  cssClass?: string;
+};
+
 export type BlockNode =
   | ParagraphNode
   | HeadingNode
@@ -211,7 +256,8 @@ export type BlockNode =
   | MathNode
   | DiagramNode
   | CalloutNode
-  | DetailsNode;
+  | DetailsNode
+  | ButtonElement;
 
 export type BlocksContent = BlockNode[];
 
@@ -252,6 +298,7 @@ export type AstroComponentFactory = (...args: any[]) => any;
  * - `diagram` — `{ code: string; format: 'mermaid' }`
  * - `callout` — `{ variant: CalloutVariant; title?: string }` (children via `<slot />`)
  * - `details` — `{ summary: string; defaultOpen?: boolean }` (children via `<slot />`)
+ * - `button` — `{ label; buttonType; alignment?; link?; file?; showFileSize?; showFileIcon?; style?; cssClass? }`
  */
 export type CustomBlocksConfig = Partial<{
   paragraph: AstroComponentFactory;
@@ -272,6 +319,7 @@ export type CustomBlocksConfig = Partial<{
   diagram: AstroComponentFactory;
   callout: AstroComponentFactory;
   details: AstroComponentFactory;
+  button: AstroComponentFactory;
 }>;
 
 /**

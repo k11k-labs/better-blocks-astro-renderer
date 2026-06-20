@@ -24,6 +24,7 @@ import CustomMath from './fixtures/CustomMath.astro';
 import CustomDiagram from './fixtures/CustomDiagram.astro';
 import CustomCallout from './fixtures/CustomCallout.astro';
 import CustomDetails from './fixtures/CustomDetails.astro';
+import CustomButton from './fixtures/CustomButton.astro';
 import CustomBold from './fixtures/CustomBold.astro';
 import CustomColor from './fixtures/CustomColor.astro';
 import CustomBg from './fixtures/CustomBg.astro';
@@ -962,6 +963,143 @@ describe('BlocksRenderer', () => {
     expect(el?.hasAttribute('open')).toBe(true);
     expect(el?.textContent).toContain('Body');
     expect(container.querySelector('details.bb-details')).toBeNull();
+  });
+
+  // ── Button (CTA / File Download) ─────────────────────────────────
+
+  it('renders a link-mode button with href, target, rel, aria-label and alignment', async () => {
+    const { container } = await render([
+      {
+        type: 'button',
+        buttonType: 'link',
+        label: 'Get started',
+        alignment: 'center',
+        link: {
+          url: 'https://example.com',
+          target: '_blank',
+          rel: 'noopener noreferrer',
+          ariaLabel: 'Get started now',
+        },
+        style: { backgroundColor: '#4945ff', textColor: '#ffffff', borderRadius: '4px' },
+        cssClass: 'my-cta',
+      },
+    ]);
+    const wrapper = container.querySelector('.bb-button-wrapper');
+    expect(styleOf(wrapper as HTMLElement)).toContain('text-align:center');
+    const a = container.querySelector('a.bb-button');
+    expect(a?.getAttribute('href')).toBe('https://example.com');
+    expect(a?.getAttribute('target')).toBe('_blank');
+    expect(a?.getAttribute('rel')).toBe('noopener noreferrer');
+    expect(a?.getAttribute('aria-label')).toBe('Get started now');
+    expect(a?.classList.contains('my-cta')).toBe(true);
+    expect(a?.textContent?.trim()).toBe('Get started');
+    const style = styleOf(a as HTMLElement);
+    expect(style).toContain('background-color:#4945ff');
+    expect(style).toContain('color:#ffffff');
+    expect(style).toContain('border-radius:4px');
+  });
+
+  it('renders a file-mode button with download, icon and human-readable size', async () => {
+    const { container } = await render([
+      {
+        type: 'button',
+        buttonType: 'file',
+        label: 'Download whitepaper',
+        alignment: 'left',
+        file: {
+          id: 123,
+          url: '/uploads/whitepaper.pdf',
+          name: 'Product Whitepaper.pdf',
+          size: 5242880,
+          ext: '.pdf',
+          mime: 'application/pdf',
+        },
+        showFileSize: true,
+        showFileIcon: true,
+      },
+    ]);
+    const a = container.querySelector('a.bb-button');
+    expect(a?.getAttribute('href')).toBe('/uploads/whitepaper.pdf');
+    expect(a?.getAttribute('download')).toBe('Product Whitepaper.pdf');
+    expect(a?.getAttribute('aria-label')).toBe('Download Product Whitepaper.pdf');
+    expect(a?.querySelector('.bb-button-icon')?.textContent?.trim()).toBe('📄');
+    expect(a?.querySelector('.bb-button-size')?.textContent?.trim()).toBe('(5 MB)');
+    expect(a?.textContent).toContain('Download whitepaper');
+  });
+
+  it('omits size and icon in file mode when their flags are off', async () => {
+    const { container } = await render([
+      {
+        type: 'button',
+        buttonType: 'file',
+        label: 'Download',
+        file: { url: '/uploads/f.zip', name: 'f.zip', size: 1024, ext: '.zip' },
+        showFileSize: false,
+        showFileIcon: false,
+      },
+    ]);
+    const a = container.querySelector('a.bb-button');
+    expect(a?.querySelector('.bb-button-icon')).toBeNull();
+    expect(a?.querySelector('.bb-button-size')).toBeNull();
+  });
+
+  it('exposes hover colors as CSS custom properties', async () => {
+    const { container } = await render([
+      {
+        type: 'button',
+        buttonType: 'link',
+        label: 'Hover me',
+        link: { url: '#' },
+        style: { hoverBackgroundColor: '#3732c9', hoverTextColor: '#ffffff' },
+      },
+    ]);
+    const style = styleOf(container.querySelector('a.bb-button') as HTMLElement);
+    expect(style).toContain('--bb-button-hover-bg:#3732c9');
+    expect(style).toContain('--bb-button-hover-color:#ffffff');
+  });
+
+  it('renders inline (no wrapper) when alignment is "none"', async () => {
+    const { container } = await render([
+      {
+        type: 'button',
+        buttonType: 'link',
+        label: 'Inline',
+        alignment: 'none',
+        link: { url: '#' },
+      },
+    ]);
+    expect(container.querySelector('.bb-button-wrapper')).toBeNull();
+    expect(container.querySelector('a.bb-button')?.textContent?.trim()).toBe('Inline');
+  });
+
+  it('renders a styled span when neither link nor file payload is present', async () => {
+    const { container } = await render([
+      { type: 'button', buttonType: 'link', label: 'No target' },
+    ]);
+    expect(container.querySelector('a.bb-button')).toBeNull();
+    expect(container.querySelector('span.bb-button')?.textContent?.trim()).toBe('No target');
+  });
+
+  it('uses a custom button renderer via the blocks override', async () => {
+    const { container } = await render(
+      [
+        {
+          type: 'button',
+          buttonType: 'file',
+          label: 'Download asset',
+          alignment: 'right',
+          file: { url: '/uploads/a.svg', name: 'a.svg' },
+        },
+      ],
+      { blocks: { button: CustomButton } }
+    );
+    const el = container.querySelector('a.custom-button');
+    expect(el).not.toBeNull();
+    expect(el?.getAttribute('data-button-type')).toBe('file');
+    expect(el?.getAttribute('href')).toBe('/uploads/a.svg');
+    expect(el?.getAttribute('download')).toBe('a.svg');
+    expect(el?.textContent?.trim()).toBe('Download asset');
+    expect(container.querySelector('a.bb-button')).toBeNull();
   });
 
   // ── Text Modifiers: uppercase, superscript, subscript ────────────

@@ -1,0 +1,78 @@
+---
+import type { ButtonElement } from './types';
+import { formatFileSize, getButtonStyle, getFileIcon } from './utils';
+
+interface Props {
+  node: ButtonElement;
+}
+
+const { node } = Astro.props;
+
+const style = getButtonStyle(node.style);
+const className = node.cssClass ? `bb-button ${node.cssClass}` : 'bb-button';
+
+const file = node.file;
+const isFile = node.buttonType === 'file' && !!file;
+const icon = isFile && node.showFileIcon && file ? getFileIcon(file) : null;
+const size =
+  isFile && node.showFileSize && file && typeof file.size === 'number'
+    ? formatFileSize(file.size)
+    : null;
+---
+
+{
+  isFile && file ? (
+    <a
+      href={file.url}
+      download={file.name}
+      aria-label={`Download ${file.name}`}
+      class={className}
+      style={style}
+    >
+      {icon && (
+        <span class="bb-button-icon" aria-hidden="true">
+          {icon}{' '}
+        </span>
+      )}
+      {node.label}
+      {size && <span class="bb-button-size"> ({size})</span>}
+    </a>
+  ) : node.link ? (
+    <a
+      href={node.link.url}
+      target={node.link.target}
+      rel={node.link.rel}
+      aria-label={node.link.ariaLabel}
+      class={className}
+      style={style}
+    >
+      {node.label}
+    </a>
+  ) : (
+    /* No link/file payload — render the label as a styled, non-navigating span. */
+    <span class={className} style={style}>
+      {node.label}
+    </span>
+  )
+}
+
+<style>
+  /* Smooth hover + visible keyboard focus, shipped by default (zero JS). Hover
+     colors come from the `--bb-button-hover-*` custom properties the renderer
+     sets from `style.hoverBackgroundColor` / `hoverTextColor`; they fall back to
+     the base color props so a button without hover colors doesn't change on
+     hover. `!important` lets the rule win over the inline base colors. */
+  .bb-button {
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease;
+  }
+  .bb-button:hover {
+    background-color: var(--bb-button-hover-bg, var(--bb-button-bg)) !important;
+    color: var(--bb-button-hover-color, var(--bb-button-color)) !important;
+  }
+  .bb-button:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+</style>
