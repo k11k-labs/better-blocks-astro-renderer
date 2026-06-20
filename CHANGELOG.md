@@ -1,5 +1,11 @@
 # @k11k/better-blocks-astro-renderer
 
+## 0.5.0
+
+### Minor Changes
+
+- [#12](https://github.com/k11k-labs/better-blocks-astro-renderer/pull/12) [`26e1a4a`](https://github.com/k11k-labs/better-blocks-astro-renderer/commit/26e1a4aa212ca34a62f2248577ed786d57b1d720) Thanks [@kkukielka](https://github.com/kkukielka)! - Add support for the `details` (collapsible) block. It renders a native, accessible `<details>` / `<summary>` disclosure with zero client-side JavaScript, honors `defaultOpen` via the HTML `open` attribute, supports arbitrarily nested `details`, and ships a scoped GitHub-inspired stylesheet (retheme via `--bb-details-*` custom properties). Replace the markup entirely through the `blocks.details` prop.
+
 ## 0.4.1
 
 ### Patch Changes
