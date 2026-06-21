@@ -1043,6 +1043,44 @@ describe('BlocksRenderer', () => {
     expect(a?.querySelector('.bb-button-size')).toBeNull();
   });
 
+  it('tags a download-mode file button for the force-download script', async () => {
+    const { container } = await render([
+      {
+        type: 'button',
+        buttonType: 'file',
+        label: 'Download',
+        file: { url: 'https://cdn.example.com/report.pdf', name: 'report.pdf', ext: '.pdf' },
+      },
+    ]);
+    const a = container.querySelector('a.bb-button');
+    // Download mode keeps the native download attribute (works same-origin) and
+    // is tagged so the progressive-enhancement script can force cross-origin
+    // downloads on click.
+    expect(a?.getAttribute('download')).toBe('report.pdf');
+    expect(a?.hasAttribute('data-bb-download')).toBe(true);
+    expect(a?.getAttribute('data-bb-download-name')).toBe('report.pdf');
+    expect(a?.getAttribute('target')).toBeNull();
+  });
+
+  it('opens the file in a new tab (no download) when filePreview is enabled', async () => {
+    const { container } = await render([
+      {
+        type: 'button',
+        buttonType: 'file',
+        label: 'View report',
+        filePreview: true,
+        file: { url: 'https://cdn.example.com/report.pdf', name: 'report.pdf', ext: '.pdf' },
+      },
+    ]);
+    const a = container.querySelector('a.bb-button');
+    expect(a?.getAttribute('href')).toBe('https://cdn.example.com/report.pdf');
+    expect(a?.getAttribute('target')).toBe('_blank');
+    expect(a?.getAttribute('rel')).toBe('noopener noreferrer');
+    expect(a?.hasAttribute('download')).toBe(false);
+    expect(a?.hasAttribute('data-bb-download')).toBe(false);
+    expect(a?.getAttribute('aria-label')).toBe('Preview report.pdf');
+  });
+
   it('exposes hover colors as CSS custom properties', async () => {
     const { container } = await render([
       {

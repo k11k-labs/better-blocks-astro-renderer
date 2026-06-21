@@ -13,6 +13,7 @@ const className = node.cssClass ? `bb-button ${node.cssClass}` : 'bb-button';
 
 const file = node.file;
 const isFile = node.buttonType === 'file' && !!file;
+const filePreview = isFile && node.filePreview === true;
 const icon = isFile && node.showFileIcon && file ? getFileIcon(file) : null;
 const size =
   isFile && node.showFileSize && file && typeof file.size === 'number'
@@ -22,21 +23,46 @@ const size =
 
 {
   isFile && file ? (
-    <a
-      href={file.url}
-      download={file.name}
-      aria-label={`Download ${file.name}`}
-      class={className}
-      style={style}
-    >
-      {icon && (
-        <span class="bb-button-icon" aria-hidden="true">
-          {icon}{' '}
-        </span>
-      )}
-      {node.label}
-      {size && <span class="bb-button-size"> ({size})</span>}
-    </a>
+    filePreview ? (
+      /* Preview mode — open the file in a new tab instead of downloading. */
+      <a
+        href={file.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`Preview ${file.name}`}
+        class={className}
+        style={style}
+      >
+        {icon && (
+          <span class="bb-button-icon" aria-hidden="true">
+            {icon}{' '}
+          </span>
+        )}
+        {node.label}
+        {size && <span class="bb-button-size"> ({size})</span>}
+      </a>
+    ) : (
+      /* Download mode — the `download` attribute handles same-origin assets; the
+         scoped script below force-downloads cross-origin ones (where `download`
+         is ignored and PDFs/videos/images would otherwise preview inline). */
+      <a
+        href={file.url}
+        download={file.name}
+        aria-label={`Download ${file.name}`}
+        class={className}
+        style={style}
+        data-bb-download
+        data-bb-download-name={file.name}
+      >
+        {icon && (
+          <span class="bb-button-icon" aria-hidden="true">
+            {icon}{' '}
+          </span>
+        )}
+        {node.label}
+        {size && <span class="bb-button-size"> ({size})</span>}
+      </a>
+    )
   ) : node.link ? (
     <a
       href={node.link.url}
@@ -76,3 +102,58 @@ const size =
     outline-offset: 2px;
   }
 </style>
+
+<script>
+  // Progressive enhancement for file-download buttons. The native `download`
+  // attribute is ignored for cross-origin URLs (the common case for Strapi/CDN
+  // assets), so browsers open renderable files (PDF, video, images) inline
+  // instead of saving them. We fetch the asset as a blob and download it from a
+  // same-origin object URL. The rest of the renderer stays zero-JS; without this
+  // script the anchor still works via its `href` + `download` attributes
+  // (same-origin), and a CORS-blocked fetch falls back to native navigation.
+  function bindBetterBlocksDownloads() {
+    document.querySelectorAll('a[data-bb-download]').forEach((node) => {
+      const anchor = node as HTMLAnchorElement;
+      if (anchor.dataset.bbDownloadBound) return;
+      anchor.dataset.bbDownloadBound = 'true';
+      anchor.addEventListener('click', (event) => {
+        // Respect modifier clicks (open in new tab, etc.) and non-primary buttons.
+        if (
+          event.defaultPrevented ||
+          event.button !== 0 ||
+          event.metaKey ||
+          event.ctrlKey ||
+          event.shiftKey ||
+          event.altKey
+        ) {
+          return;
+        }
+        const url = anchor.href;
+        const name = anchor.getAttribute('data-bb-download-name') || '';
+        event.preventDefault();
+        fetch(url)
+          .then((response) => {
+            if (!response.ok) throw new Error('Request failed: ' + response.status);
+            return response.blob();
+          })
+          .then((blob) => {
+            const objectUrl = URL.createObjectURL(blob);
+            const temp = document.createElement('a');
+            temp.href = objectUrl;
+            temp.download = name;
+            document.body.appendChild(temp);
+            temp.click();
+            temp.remove();
+            URL.revokeObjectURL(objectUrl);
+          })
+          .catch(() => {
+            // CORS-blocked or offline — fall back to native navigation.
+            window.location.href = url;
+          });
+      });
+    });
+  }
+
+  bindBetterBlocksDownloads();
+  document.addEventListener('astro:page-load', bindBetterBlocksDownloads);
+</script>

@@ -239,6 +239,13 @@ export type ButtonElement = {
   file?: ButtonFile;
   showFileSize?: boolean;
   showFileIcon?: boolean;
+  /**
+   * File mode only. When `true`, the file opens in a new tab for preview instead
+   * of downloading. When `false`/omitted, the file is force-downloaded (even
+   * when hosted cross-origin, where the native `download` attribute is ignored
+   * by browsers) via a small progressive-enhancement script.
+   */
+  filePreview?: boolean;
   style?: ButtonStyle;
   cssClass?: string;
 };

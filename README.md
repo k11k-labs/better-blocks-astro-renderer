@@ -198,11 +198,17 @@ Block-level `button` nodes render a WordPress-style call-to-action as a single, 
 - **Link** (`buttonType: 'link'`) → `<a href={link.url} target rel aria-label>` for a normal CTA. `rel="noopener noreferrer"` is honored when present (the editor adds it automatically for `target="_blank"`).
 - **File** (`buttonType: 'file'`) → a download link (`<a href={file.url} download={file.name}>`) for a Media Library asset, optionally prefixed with a file-type icon (`showFileIcon`) and suffixed with a human-readable size (`showFileSize`, e.g. `(5 MB)`).
 
+#### Download vs. preview
+
+By default a file button **force-downloads** the asset. The native `download` attribute only works same-origin, so for cross-origin assets (Strapi/CDN) browsers ignore it and open renderable files (PDF, video, images) inline. To fix that, download-mode buttons are tagged `data-bb-download` and a **tiny scoped `<script>`** (the renderer's only client-side JavaScript) fetches the asset as a blob and saves it from a same-origin object URL. This is progressive enhancement: without JS the anchor still works via its `href` + `download` attributes, and a CORS-blocked fetch falls back to native navigation.
+
+Set `filePreview: true` to instead **open the file in a new tab** (`target="_blank" rel="noopener noreferrer"`, no download) so users can preview it before saving — this path is fully zero-JS.
+
 The optional `style` object is applied as inline CSS (`backgroundColor`, `textColor`, `borderRadius`, `fontSize`, `fontWeight`, `padding`, `border`), and `alignment` (`left` / `center` / `right`) wraps the button in a `text-align`ed `.bb-button-wrapper` (`none` renders it inline with no wrapper). A `cssClass` is appended to the default `bb-button` class for theming.
 
-Because inline styles can't express `:hover`, the `hoverBackgroundColor` / `hoverTextColor` are exposed as `--bb-button-hover-bg` / `--bb-button-hover-color` custom properties, and a **scoped `<style>`** (zero client-side JavaScript) wires up the hover transition and a visible keyboard focus ring by default — no extra CSS required.
+Because inline styles can't express `:hover`, the `hoverBackgroundColor` / `hoverTextColor` are exposed as `--bb-button-hover-bg` / `--bb-button-hover-color` custom properties, and a **scoped `<style>`** wires up the hover transition and a visible keyboard focus ring by default — no extra CSS required.
 
-To replace the markup entirely, override the `button` block. It receives `label`, `buttonType`, `alignment`, `link`, `file`, `showFileSize`, `showFileIcon`, `style`, and `cssClass` as props:
+To replace the markup entirely, override the `button` block. It receives `label`, `buttonType`, `alignment`, `link`, `file`, `showFileSize`, `showFileIcon`, `filePreview`, `style`, and `cssClass` as props:
 
 ```astro
 ---
@@ -237,35 +243,36 @@ const { blocks } = Astro.props;
 
 ### Block properties
 
-| Property       | Applies to                | Description                                           |
-| -------------- | ------------------------- | ----------------------------------------------------- |
-| `textAlign`    | paragraph, heading, quote | Text alignment (`left`, `center`, `right`, `justify`) |
-| `lineHeight`   | paragraph, heading, quote | CSS line-height value (e.g. `1.5`, `2.0`)             |
-| `indent`       | paragraph, heading, quote | Block indentation level (`marginLeft: N * 2rem`)      |
-| `indentLevel`  | list                      | Cycling list-style-type per nesting depth             |
-| `format`       | list                      | `ordered`, `unordered`, or `todo`                     |
-| `checked`      | list-item (in todo lists) | Checkbox state (`true`/`false`)                       |
-| `target`       | link                      | `_blank` for new-tab links                            |
-| `rel`          | link                      | `noopener noreferrer` for new-tab links               |
-| `caption`      | image                     | Text displayed below the image                        |
-| `imageAlign`   | image                     | Image alignment (`left`, `center`, `right`)           |
-| `url`          | media-embed               | Embed URL (YouTube/Vimeo iframe src)                  |
-| `originalUrl`  | media-embed               | Original user-provided URL                            |
-| `format`       | math                      | `inline` (`<span>`) or `block` (`<div>`)              |
-| `value`        | math                      | LaTeX source rendered with KaTeX                      |
-| `format`       | diagram                   | `mermaid` (the only supported diagram format)         |
-| `value`        | diagram                   | Mermaid source, pre-rendered to SVG on the server     |
-| `summary`      | details                   | Plain-text label for the `<summary>`                  |
-| `defaultOpen`  | details                   | Open on initial render (HTML `open` attribute)        |
-| `buttonType`   | button                    | `link` (CTA) or `file` (Media Library download)       |
-| `label`        | button                    | Visible button text                                   |
-| `alignment`    | button                    | `left`, `center`, `right`, or `none` (inline)         |
-| `link`         | button                    | `{ url, target?, rel?, ariaLabel? }` (link mode)      |
-| `file`         | button                    | `{ url, name, size?, ext?, mime? }` (file mode)       |
-| `showFileIcon` | button                    | Prefix a file-type icon (file mode)                   |
-| `showFileSize` | button                    | Suffix a human-readable size, e.g. `(5 MB)`           |
-| `style`        | button                    | Inline CSS + `hover*` colors via custom properties    |
-| `cssClass`     | button                    | Extra class appended to `bb-button`                   |
+| Property       | Applies to                | Description                                               |
+| -------------- | ------------------------- | --------------------------------------------------------- |
+| `textAlign`    | paragraph, heading, quote | Text alignment (`left`, `center`, `right`, `justify`)     |
+| `lineHeight`   | paragraph, heading, quote | CSS line-height value (e.g. `1.5`, `2.0`)                 |
+| `indent`       | paragraph, heading, quote | Block indentation level (`marginLeft: N * 2rem`)          |
+| `indentLevel`  | list                      | Cycling list-style-type per nesting depth                 |
+| `format`       | list                      | `ordered`, `unordered`, or `todo`                         |
+| `checked`      | list-item (in todo lists) | Checkbox state (`true`/`false`)                           |
+| `target`       | link                      | `_blank` for new-tab links                                |
+| `rel`          | link                      | `noopener noreferrer` for new-tab links                   |
+| `caption`      | image                     | Text displayed below the image                            |
+| `imageAlign`   | image                     | Image alignment (`left`, `center`, `right`)               |
+| `url`          | media-embed               | Embed URL (YouTube/Vimeo iframe src)                      |
+| `originalUrl`  | media-embed               | Original user-provided URL                                |
+| `format`       | math                      | `inline` (`<span>`) or `block` (`<div>`)                  |
+| `value`        | math                      | LaTeX source rendered with KaTeX                          |
+| `format`       | diagram                   | `mermaid` (the only supported diagram format)             |
+| `value`        | diagram                   | Mermaid source, pre-rendered to SVG on the server         |
+| `summary`      | details                   | Plain-text label for the `<summary>`                      |
+| `defaultOpen`  | details                   | Open on initial render (HTML `open` attribute)            |
+| `buttonType`   | button                    | `link` (CTA) or `file` (Media Library download)           |
+| `label`        | button                    | Visible button text                                       |
+| `alignment`    | button                    | `left`, `center`, `right`, or `none` (inline)             |
+| `link`         | button                    | `{ url, target?, rel?, ariaLabel? }` (link mode)          |
+| `file`         | button                    | `{ url, name, size?, ext?, mime? }` (file mode)           |
+| `showFileIcon` | button                    | Prefix a file-type icon (file mode)                       |
+| `showFileSize` | button                    | Suffix a human-readable size, e.g. `(5 MB)`               |
+| `filePreview`  | button                    | `true` opens the file in a new tab instead of downloading |
+| `style`        | button                    | Inline CSS + `hover*` colors via custom properties        |
+| `cssClass`     | button                    | Extra class appended to `bb-button`                       |
 
 ## Supported Modifiers
 
