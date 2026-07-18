@@ -298,6 +298,54 @@ export type SocialEmbedNode = {
   children?: [{ type: 'text'; text: '' }];
 };
 
+// ── Audio (Media Library / raw URL + HTML5 player) ───────────────────
+
+export type AudioAlignment = 'left' | 'center' | 'right' | 'none';
+
+export type AudioPreload = 'none' | 'metadata' | 'auto';
+
+/**
+ * The audio asset. `url` is the value to render as-is — the editor stores the
+ * backend-prefixed URL for Media-Library assets (same as `image`/`button`), so
+ * the renderer must **not** re-prefix it. `id` is absent when the block was
+ * inserted from a raw URL; every other key is optional.
+ */
+export type AudioFile = {
+  id?: number;
+  url: string;
+  name?: string;
+  ext?: string;
+  hash?: string;
+  mime?: string;
+  /** Bytes. */
+  size?: number;
+  /** `local` | `cloudinary` | … */
+  provider?: string;
+  /** Seconds. Optional — not populated by Strapi Upload today. */
+  duration?: number;
+};
+
+/** Native `<audio>` player flags, mapped 1:1 to element attributes. */
+export type AudioPlayer = {
+  autoplay?: boolean;
+  loop?: boolean;
+  /** Defaults to `true`. */
+  controls?: boolean;
+  preload?: AudioPreload;
+};
+
+export type AudioNode = {
+  type: 'audio';
+  file: AudioFile;
+  title?: string;
+  caption?: string;
+  player?: AudioPlayer;
+  /** `left` | `center` (default) | `right` | `none` (full-width, inline flow). */
+  alignment?: AudioAlignment;
+  /** Void-node placeholder emitted by the editor — ignored when rendering. */
+  children?: [{ type: 'text'; text: '' }];
+};
+
 export type BlockNode =
   | ParagraphNode
   | HeadingNode
@@ -313,7 +361,8 @@ export type BlockNode =
   | CalloutNode
   | DetailsNode
   | ButtonElement
-  | SocialEmbedNode;
+  | SocialEmbedNode
+  | AudioNode;
 
 export type BlocksContent = BlockNode[];
 
@@ -356,6 +405,7 @@ export type AstroComponentFactory = (...args: any[]) => any;
  * - `details` — `{ summary: string; defaultOpen?: boolean }` (children via `<slot />`)
  * - `button` — `{ label; buttonType; alignment?; link?; file?; showFileSize?; showFileIcon?; style?; cssClass? }`
  * - `social-embed` — `{ platform; url; embedCode?; oembed?; alignment?; caption? }`
+ * - `audio` — `{ file; title?; caption?; player?; alignment? }`
  */
 export type CustomBlocksConfig = Partial<{
   paragraph: AstroComponentFactory;
@@ -378,6 +428,7 @@ export type CustomBlocksConfig = Partial<{
   details: AstroComponentFactory;
   button: AstroComponentFactory;
   'social-embed': AstroComponentFactory;
+  audio: AstroComponentFactory;
 }>;
 
 /**

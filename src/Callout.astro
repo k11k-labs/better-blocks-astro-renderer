@@ -51,8 +51,14 @@ const CalloutComp = blocks?.callout as any;
 {
   CalloutComp ? (
     <CalloutComp variant={variant} title={node.title}>
-      {node.children.map((child) => (
-        <Block block={child} blocks={blocks} modifiers={modifiers} diagramTheme={diagramTheme} />
+      {node.children.map((child, index) => (
+        <Block
+          block={child}
+          blocks={blocks}
+          modifiers={modifiers}
+          diagramTheme={diagramTheme}
+          index={index}
+        />
       ))}
     </CalloutComp>
   ) : (
@@ -64,8 +70,14 @@ const CalloutComp = blocks?.callout as any;
         {title}
       </p>
       <div class="bb-callout-body">
-        {node.children.map((child) => (
-          <Block block={child} blocks={blocks} modifiers={modifiers} diagramTheme={diagramTheme} />
+        {node.children.map((child, index) => (
+          <Block
+            block={child}
+            blocks={blocks}
+            modifiers={modifiers}
+            diagramTheme={diagramTheme}
+            index={index}
+          />
         ))}
       </div>
     </aside>

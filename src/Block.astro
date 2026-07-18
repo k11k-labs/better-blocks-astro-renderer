@@ -9,6 +9,7 @@ import Callout from './Callout.astro';
 import Details from './Details.astro';
 import Button from './Button.astro';
 import SocialEmbed from './SocialEmbed.astro';
+import Audio from './Audio.astro';
 import { getBlockStyle, getPlainText } from './utils';
 
 interface Props {
@@ -16,9 +17,11 @@ interface Props {
   blocks?: CustomBlocksConfig;
   modifiers?: CustomModifiersConfig;
   diagramTheme?: DiagramTheme;
+  /** Position among sibling blocks — forwarded to blocks that need a stable key. */
+  index?: number;
 }
 
-const { block, blocks, modifiers, diagramTheme } = Astro.props;
+const { block, blocks, modifiers, diagramTheme, index } = Astro.props;
 
 const ParagraphComp = blocks?.paragraph as any;
 const HeadingComp = blocks?.heading as any;
@@ -178,3 +181,5 @@ const EmbedComp = blocks?.['media-embed'] as any;
 {block.type === 'button' && <Button node={block} blocks={blocks} />}
 
 {block.type === 'social-embed' && <SocialEmbed node={block} blocks={blocks} />}
+
+{block.type === 'audio' && <Audio node={block} blocks={blocks} index={index} />}
