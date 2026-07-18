@@ -1,5 +1,11 @@
 # @k11k/better-blocks-astro-renderer
 
+## 0.9.0
+
+### Minor Changes
+
+- [#30](https://github.com/k11k-labs/better-blocks-astro-renderer/pull/30) [`1a957ad`](https://github.com/k11k-labs/better-blocks-astro-renderer/commit/1a957adb44c732191356e9f70243e109ccd346c2) Thanks [@kkukielka](https://github.com/kkukielka)! - Add support for the `audio` block (Media Library + customizable HTML5 player). Embeds audio from the Strapi Media Library or a raw URL via a native `<audio class="bb-audio-player">` element whose player flags map 1:1 (`controls` defaulting to `true`, `autoplay`, `loop`, `preload`), with **zero client-side JavaScript**. `file.url` is rendered as-is (already backend-prefixed, like `image`/`button`). The player is wrapped in a `<figure class="bb-audio align-{alignment}">` (alignment defaults to `center`; `none` = full-width) with an optional `title` above and `caption` below, each in a `<figcaption>`. For accessibility the `<audio>` gets an `aria-label` (the title, falling back to `"Audio player"`) and, when a caption is present, an `aria-describedby` pointing at it, plus fallback text and a download link inside the element for unsupported formats/browsers. Markup, inline styles, and the `bb-audio*` class hooks are byte-for-byte compatible with the [React renderer](https://github.com/k11k-labs/better-blocks-react-renderer), so a shared CSS theme covers both. Overridable through the `blocks['audio']` prop. New exported types: `AudioNode`, `AudioFile`, `AudioPlayer`, `AudioPreload`, `AudioAlignment`.
+
 ## 0.8.0
 
 ### Minor Changes
