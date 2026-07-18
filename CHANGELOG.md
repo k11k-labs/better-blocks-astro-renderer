@@ -1,5 +1,11 @@
 # @k11k/better-blocks-astro-renderer
 
+## 0.8.0
+
+### Minor Changes
+
+- [#27](https://github.com/k11k-labs/better-blocks-astro-renderer/pull/27) [`8b8efb1`](https://github.com/k11k-labs/better-blocks-astro-renderer/commit/8b8efb1f038e332dc64df2fe6cf4b1c729d2c317) Thanks [@kkukielka](https://github.com/kkukielka)! - Add support for the `social-embed` block (Twitter/X, Instagram, Facebook, TikTok, LinkedIn, Pinterest). The renderer follows the plugin's source priority — author-pasted `embedCode` → provider `oembed.html` → a graceful `<a>` link card (with author/thumbnail/title when available) — and emits the trusted embed markup verbatim inside an accessible `<figure class="bb-social-embed bb-social-embed-{platform} social-embed align-{alignment}" aria-label="{provider} post by {author}">` with an optional `<figcaption>`. Markup, class hooks, type surface (`SocialEmbedNode`, `SocialPlatform`, `SocialEmbedAlignment`, `SocialEmbedOembed`), and provider labels (Twitter presents as “X”) match the React renderer, so shared CSS themes both. Platform widget scripts (twitter/instagram/tiktok/pinterest/facebook) load **lazily and deduped** via an IntersectionObserver: no third-party JavaScript loads until an embed nears the viewport, each script is injected at most once per page, and embeds are re-processed on `astro:page-load` for view-transition navigations. LinkedIn needs no script (self-contained `<iframe>`), and `loading="lazy"` is added to provider iframes that don't already declare it. The block is overridable through the `blocks['social-embed']` prop.
+
 ## 0.7.0
 
 ### Minor Changes
