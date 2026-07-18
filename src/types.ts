@@ -250,6 +250,54 @@ export type ButtonElement = {
   cssClass?: string;
 };
 
+// ── Social Embed (Twitter/X, Instagram, Facebook, TikTok, …) ─────────
+
+/**
+ * The social platform a `social-embed` node targets. `linkedin` renders a
+ * self-contained `<iframe>` (no widget script); every other platform loads a
+ * lazy, deduped widget script (see `SOCIAL_SCRIPTS` in `utils.ts`).
+ */
+export type SocialPlatform =
+  | 'twitter'
+  | 'instagram'
+  | 'facebook'
+  | 'tiktok'
+  | 'linkedin'
+  | 'pinterest';
+
+export type SocialEmbedAlignment = 'left' | 'center' | 'right';
+
+/**
+ * oEmbed payload fetched server-side by the plugin at author time. Every field
+ * is optional — providers vary in what they return (e.g. `thumbnailUrl` is
+ * present for TikTok/Pinterest but absent for Twitter).
+ */
+export type SocialEmbedOembed = {
+  /** Provider-supplied embed markup (a `<blockquote>` or `<iframe>`). Trusted. */
+  html?: string;
+  title?: string;
+  author?: string;
+  authorUrl?: string;
+  thumbnailUrl?: string;
+  providerName?: string;
+  width?: number;
+  height?: number;
+};
+
+export type SocialEmbedNode = {
+  type: 'social-embed';
+  platform: SocialPlatform;
+  url: string;
+  /** Author-pasted manual override, takes priority over `oembed.html`. Trusted. */
+  embedCode?: string;
+  /** Fetched server-side by the plugin at author time. */
+  oembed?: SocialEmbedOembed;
+  alignment?: SocialEmbedAlignment;
+  caption?: string;
+  /** Void-node placeholder emitted by the editor — ignored when rendering. */
+  children?: [{ type: 'text'; text: '' }];
+};
+
 export type BlockNode =
   | ParagraphNode
   | HeadingNode
@@ -264,7 +312,8 @@ export type BlockNode =
   | DiagramNode
   | CalloutNode
   | DetailsNode
-  | ButtonElement;
+  | ButtonElement
+  | SocialEmbedNode;
 
 export type BlocksContent = BlockNode[];
 
@@ -306,6 +355,7 @@ export type AstroComponentFactory = (...args: any[]) => any;
  * - `callout` — `{ variant: CalloutVariant; title?: string }` (children via `<slot />`)
  * - `details` — `{ summary: string; defaultOpen?: boolean }` (children via `<slot />`)
  * - `button` — `{ label; buttonType; alignment?; link?; file?; showFileSize?; showFileIcon?; style?; cssClass? }`
+ * - `social-embed` — `{ platform; url; embedCode?; oembed?; alignment?; caption? }`
  */
 export type CustomBlocksConfig = Partial<{
   paragraph: AstroComponentFactory;
@@ -327,6 +377,7 @@ export type CustomBlocksConfig = Partial<{
   callout: AstroComponentFactory;
   details: AstroComponentFactory;
   button: AstroComponentFactory;
+  'social-embed': AstroComponentFactory;
 }>;
 
 /**

@@ -1,4 +1,12 @@
-import type { ButtonFile, ButtonStyle, InlineNode, StyleValue, TextNode } from './types';
+import type {
+  ButtonFile,
+  ButtonStyle,
+  InlineNode,
+  SocialEmbedNode,
+  SocialPlatform,
+  StyleValue,
+  TextNode,
+} from './types';
 
 // ── Block Style ──────────────────────────────────────────────────────
 
@@ -202,4 +210,77 @@ export function getButtonStyle(style?: ButtonStyle): StyleValue {
   if (style.hoverBackgroundColor) out['--bb-button-hover-bg'] = style.hoverBackgroundColor;
   if (style.hoverTextColor) out['--bb-button-hover-color'] = style.hoverTextColor;
   return out;
+}
+
+// ── Social Embed (Twitter/X, Instagram, Facebook, TikTok, …) ─────────
+
+/**
+ * Per-platform widget script URL. LinkedIn is intentionally absent — its
+ * oEmbed markup is a self-contained `<iframe>` that needs no script. Loaded
+ * lazily and deduped by the client loader in `SocialEmbedScript.astro`.
+ */
+export const SOCIAL_SCRIPTS: Partial<Record<SocialPlatform, string>> = {
+  twitter: 'https://platform.twitter.com/widgets.js',
+  instagram: 'https://www.instagram.com/embed.js',
+  tiktok: 'https://www.tiktok.com/embed.js',
+  pinterest: 'https://assets.pinterest.com/js/pinit.js',
+  facebook: 'https://connect.facebook.net/en_US/sdk.js',
+};
+
+export type SocialEmbedSource = { kind: 'html'; html: string } | { kind: 'fallback' };
+
+/**
+ * Resolves which markup a social embed should render, following the source
+ * priority from the plugin contract: author-pasted `embedCode` → provider
+ * `oembed.html` → a fallback link card. Whitespace-only strings are treated as
+ * absent so an empty override doesn't blank out a usable oEmbed.
+ */
+export function getSocialEmbedSource(node: SocialEmbedNode): SocialEmbedSource {
+  const embedCode = node.embedCode?.trim();
+  if (embedCode) return { kind: 'html', html: embedCode };
+  const oembedHtml = node.oembed?.html?.trim();
+  if (oembedHtml) return { kind: 'html', html: oembedHtml };
+  return { kind: 'fallback' };
+}
+
+/**
+ * Adds `loading="lazy"` to any `<iframe>` in the (trusted) embed markup that
+ * doesn't already declare a `loading` attribute — so provider iframes
+ * (LinkedIn, Pinterest, Facebook) defer offscreen loads. The negative lookahead
+ * stays within the opening tag (`[^>]` excludes `>`), so only iframes without a
+ * `loading` attribute are touched and the rest of the markup is left verbatim.
+ */
+export function addLazyLoadingToIframes(html: string): string {
+  return html.replace(/<iframe\b(?![^>]*\bloading=)/gi, '<iframe loading="lazy"');
+}
+
+// Nicely-cased display names, used when `oembed.providerName` is absent.
+// Mirrors the React renderer (Twitter now presents as "X").
+const PLATFORM_LABELS: Record<SocialPlatform, string> = {
+  twitter: 'X',
+  instagram: 'Instagram',
+  facebook: 'Facebook',
+  tiktok: 'TikTok',
+  linkedin: 'LinkedIn',
+  pinterest: 'Pinterest',
+};
+
+/**
+ * Human-readable provider name for `aria-label` / the fallback card. Prefers
+ * `oembed.providerName`, then a nicely-cased platform label, then the raw id.
+ */
+export function getSocialProviderName(node: SocialEmbedNode): string {
+  const provider = node.oembed?.providerName?.trim();
+  if (provider) return provider;
+  return PLATFORM_LABELS[node.platform] ?? node.platform;
+}
+
+/**
+ * `aria-label` for the embed's `<figure>`, e.g. "Twitter post by Author Name".
+ * Drops the "by …" clause when no author is known.
+ */
+export function getSocialAriaLabel(node: SocialEmbedNode): string {
+  const provider = getSocialProviderName(node);
+  const author = node.oembed?.author?.trim();
+  return author ? `${provider} post by ${author}` : `${provider} post`;
 }

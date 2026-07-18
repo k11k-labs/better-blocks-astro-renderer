@@ -4,6 +4,7 @@ import 'katex/dist/katex.min.css';
 import CustomCallout from '../components/CustomCallout.astro';
 import CustomDetails from '../components/CustomDetails.astro';
 import CustomButton from '../components/CustomButton.astro';
+import CustomSocialEmbed from '../components/CustomSocialEmbed.astro';
 
 interface Article {
   id: number;
@@ -41,14 +42,14 @@ try {
     <div style="max-width: 720px; margin: 0 auto; padding: 24px; font-family: system-ui;">
       <h1>Better Blocks Renderer Playground</h1>
       <p style="color: #666; margin-bottom: 32px;">
-        Fetching articles from Strapi at <code>localhost:1337</code> and rendering with
+        Fetching articles from Strapi at <code>localhost:1339</code> and rendering with
         <code>@k11k/better-blocks-astro-renderer</code> — native Astro, zero client-side JavaScript.
       </p>
 
       {
         error && (
           <p style="color: red;">
-            Error: {error}. Make sure Strapi is running on port 1337.
+            Error: {error}. Make sure Strapi is running on port 1339.
           </p>
         )
       }
@@ -57,7 +58,7 @@ try {
         !error && articles.length === 0 && (
           <p>
             No published articles found. Create one in
-            <a href="http://localhost:1337/admin" target="_blank" rel="noopener noreferrer">
+            <a href="http://localhost:1339/admin" target="_blank" rel="noopener noreferrer">
               Strapi admin
             </a>
             and publish it.
@@ -72,6 +73,7 @@ try {
           const callouts = article.content.filter((block) => block.type === 'callout');
           const details = article.content.filter((block) => block.type === 'details');
           const buttons = article.content.filter((block) => block.type === 'button');
+          const socialEmbeds = article.content.filter((block) => block.type === 'social-embed');
 
           return (
             <article style="margin-bottom: 48px; border-bottom: 1px solid #eee; padding-bottom: 24px;">
@@ -138,6 +140,33 @@ try {
                     (pill-shaped gradient CTA) instead of the built-in default.
                   </p>
                   <BlocksRenderer content={buttons} blocks={{ button: CustomButton }} />
+                </section>
+              )}
+
+              {socialEmbeds.length > 0 && (
+                <section style="margin-top: 40px; padding-top: 16px; border-top: 2px dashed #a5d8ff;">
+                  <h2 style="color: #1c7ed6; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em;">
+                    ⑦ Social embeds — default rendering (lazy, deduped widget scripts)
+                  </h2>
+                  <p style="color: #666; font-size: 14px; margin-top: 0;">
+                    The same social embeds as in the article above. Platform widget scripts load
+                    lazily via an <code>IntersectionObserver</code> — scroll one into view and its
+                    script is injected once. The embed with no <code>embedCode</code>/
+                    <code>oembed.html</code> degrades to a fallback link card.
+                  </p>
+                  <BlocksRenderer content={socialEmbeds} />
+
+                  <h2 style="color: #7c3aed; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 32px;">
+                    ⑧ Custom social-embed renderer — same embeds via the <code>blocks</code> override
+                  </h2>
+                  <p style="color: #666; font-size: 14px; margin-top: 0;">
+                    The same embeds re-rendered with a custom <code>social-embed</code> component
+                    (a compact card that just links out) instead of the built-in default.
+                  </p>
+                  <BlocksRenderer
+                    content={socialEmbeds}
+                    blocks={{ 'social-embed': CustomSocialEmbed }}
+                  />
                 </section>
               )}
             </article>

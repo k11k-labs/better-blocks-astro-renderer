@@ -25,6 +25,7 @@ import CustomDiagram from './fixtures/CustomDiagram.astro';
 import CustomCallout from './fixtures/CustomCallout.astro';
 import CustomDetails from './fixtures/CustomDetails.astro';
 import CustomButton from './fixtures/CustomButton.astro';
+import CustomSocialEmbed from './fixtures/CustomSocialEmbed.astro';
 import CustomBold from './fixtures/CustomBold.astro';
 import CustomColor from './fixtures/CustomColor.astro';
 import CustomBg from './fixtures/CustomBg.astro';
@@ -1138,6 +1139,202 @@ describe('BlocksRenderer', () => {
     expect(el?.getAttribute('download')).toBe('a.svg');
     expect(el?.textContent?.trim()).toBe('Download asset');
     expect(container.querySelector('a.bb-button')).toBeNull();
+  });
+
+  // ── Social Embed (Twitter/X, Instagram, TikTok, …) ───────────────
+
+  it('renders oembed.html verbatim inside an aligned, labelled figure', async () => {
+    const { container } = await render([
+      {
+        type: 'social-embed',
+        platform: 'twitter',
+        url: 'https://x.com/user/status/123',
+        oembed: {
+          html: '<blockquote class="twitter-tweet"><p>Hello world</p></blockquote>',
+          author: 'Jane Doe',
+          providerName: 'Twitter',
+        },
+        alignment: 'center',
+      },
+    ]);
+    const figure = container.querySelector('figure.bb-social-embed');
+    expect(figure).not.toBeNull();
+    // Class hooks mirror the React renderer.
+    expect(figure?.classList.contains('bb-social-embed-twitter')).toBe(true);
+    expect(figure?.classList.contains('social-embed')).toBe(true);
+    expect(figure?.classList.contains('align-center')).toBe(true);
+    expect(figure?.getAttribute('aria-label')).toBe('Twitter post by Jane Doe');
+    // Embed markup is emitted verbatim (not sanitized) in the `bb-social-embed-html` wrapper.
+    expect(
+      figure?.querySelector('.bb-social-embed-html blockquote.twitter-tweet')?.textContent
+    ).toContain('Hello world');
+    // Tagged for the lazy widget-script loader.
+    expect(figure?.getAttribute('data-bb-social-embed')).toBe('');
+    expect(figure?.getAttribute('data-bb-social-platform')).toBe('twitter');
+  });
+
+  it('prefers author-pasted embedCode over oembed.html', async () => {
+    const { container } = await render([
+      {
+        type: 'social-embed',
+        platform: 'instagram',
+        url: 'https://www.instagram.com/p/abc/',
+        embedCode: '<blockquote class="instagram-media" data-src="pasted"></blockquote>',
+        oembed: { html: '<blockquote class="instagram-media" data-src="oembed"></blockquote>' },
+      },
+    ]);
+    const blockquote = container.querySelector('figure.social-embed blockquote');
+    expect(blockquote?.getAttribute('data-src')).toBe('pasted');
+  });
+
+  it('defaults alignment to center', async () => {
+    const { container } = await render([
+      {
+        type: 'social-embed',
+        platform: 'twitter',
+        url: 'https://x.com/user/status/1',
+        oembed: { html: '<blockquote class="twitter-tweet"></blockquote>' },
+      },
+    ]);
+    expect(container.querySelector('figure.social-embed')?.classList.contains('align-center')).toBe(
+      true
+    );
+  });
+
+  it('renders a caption in a figcaption when present', async () => {
+    const { container } = await render([
+      {
+        type: 'social-embed',
+        platform: 'twitter',
+        url: 'https://x.com/user/status/1',
+        oembed: { html: '<blockquote class="twitter-tweet"></blockquote>' },
+        caption: 'A great tweet',
+      },
+    ]);
+    expect(container.querySelector('figure.social-embed figcaption')?.textContent?.trim()).toBe(
+      'A great tweet'
+    );
+  });
+
+  it('adds loading="lazy" to iframes that lack it, leaving existing ones', async () => {
+    const { container } = await render([
+      {
+        type: 'social-embed',
+        platform: 'linkedin',
+        url: 'https://www.linkedin.com/posts/abc',
+        oembed: {
+          html: '<iframe src="https://www.linkedin.com/embed/abc"></iframe><iframe loading="eager" src="x"></iframe>',
+        },
+      },
+    ]);
+    const iframes = container.querySelectorAll('figure.social-embed iframe');
+    expect(iframes[0]?.getAttribute('loading')).toBe('lazy');
+    // Existing loading attribute is preserved (not overwritten or duplicated).
+    expect(iframes[1]?.getAttribute('loading')).toBe('eager');
+  });
+
+  it('does not tag linkedin embeds for the widget-script loader (self-contained iframe)', async () => {
+    const { html, container } = await render([
+      {
+        type: 'social-embed',
+        platform: 'linkedin',
+        url: 'https://www.linkedin.com/posts/abc',
+        oembed: { html: '<iframe src="https://www.linkedin.com/embed/abc"></iframe>' },
+      },
+    ]);
+    const figure = container.querySelector('figure.social-embed');
+    expect(figure?.hasAttribute('data-bb-social-embed')).toBe(false);
+    expect(figure?.hasAttribute('data-bb-social-platform')).toBe(false);
+    // No widget-script marker anywhere for a script-less platform.
+    expect(html).not.toContain('data-bb-social-platform');
+  });
+
+  it('falls back to a link card when no embedCode/oembed.html is present', async () => {
+    const { container } = await render([
+      {
+        type: 'social-embed',
+        platform: 'tiktok',
+        url: 'https://www.tiktok.com/@user/video/1',
+        oembed: {
+          author: 'Creator',
+          title: 'Cool video',
+          thumbnailUrl: 'https://cdn.example.com/thumb.jpg',
+          providerName: 'TikTok',
+        },
+      },
+    ]);
+    const link = container.querySelector('figure.bb-social-embed a.bb-social-embed-fallback');
+    expect(link?.getAttribute('href')).toBe('https://www.tiktok.com/@user/video/1');
+    expect(link?.getAttribute('rel')).toBe('noopener noreferrer');
+    expect(link?.querySelector('.bb-social-embed-fallback-provider')?.textContent).toBe('TikTok');
+    // Title prefers oembed.title over the descriptive label.
+    expect(link?.querySelector('.bb-social-embed-fallback-title')?.textContent).toBe('Cool video');
+    expect(link?.querySelector('img.bb-social-embed-fallback-thumb')?.getAttribute('src')).toBe(
+      'https://cdn.example.com/thumb.jpg'
+    );
+    // A pure fallback needs no widget script.
+    expect(
+      container.querySelector('figure.bb-social-embed')?.hasAttribute('data-bb-social-embed')
+    ).toBe(false);
+  });
+
+  it('derives the provider name and aria-label from the platform when oembed is absent', async () => {
+    const { container } = await render([
+      { type: 'social-embed', platform: 'pinterest', url: 'https://pin.it/abc' },
+    ]);
+    const figure = container.querySelector('figure.bb-social-embed');
+    expect(figure?.getAttribute('aria-label')).toBe('Pinterest post');
+    expect(figure?.querySelector('.bb-social-embed-fallback-provider')?.textContent).toBe(
+      'Pinterest'
+    );
+  });
+
+  it('uses a nicely-cased platform label when oembed.providerName is absent', async () => {
+    const { container } = await render([
+      {
+        type: 'social-embed',
+        platform: 'linkedin',
+        url: 'https://www.linkedin.com/posts/abc',
+        oembed: { html: '<iframe src="https://www.linkedin.com/embed/abc"></iframe>' },
+      },
+    ]);
+    // "LinkedIn", not a naive "Linkedin".
+    expect(container.querySelector('figure.bb-social-embed')?.getAttribute('aria-label')).toBe(
+      'LinkedIn post'
+    );
+  });
+
+  it('labels Twitter as "X" by default (mirrors the React renderer)', async () => {
+    const { container } = await render([
+      { type: 'social-embed', platform: 'twitter', url: 'https://x.com/user/status/1' },
+    ]);
+    const figure = container.querySelector('figure.bb-social-embed');
+    expect(figure?.getAttribute('aria-label')).toBe('X post');
+    expect(figure?.querySelector('.bb-social-embed-fallback-provider')?.textContent).toBe('X');
+  });
+
+  it('routes social-embed through a custom renderer when provided', async () => {
+    const { container } = await render(
+      [
+        {
+          type: 'social-embed',
+          platform: 'twitter',
+          url: 'https://x.com/user/status/1',
+          alignment: 'left',
+          caption: 'Overridden',
+          oembed: { html: '<blockquote class="twitter-tweet"></blockquote>' },
+        },
+      ],
+      { blocks: { 'social-embed': CustomSocialEmbed } }
+    );
+    const el = container.querySelector('div.custom-social-embed');
+    expect(el).not.toBeNull();
+    expect(el?.getAttribute('data-platform')).toBe('twitter');
+    expect(el?.getAttribute('data-alignment')).toBe('left');
+    expect(el?.getAttribute('data-url')).toBe('https://x.com/user/status/1');
+    expect(el?.querySelector('.custom-social-caption')?.textContent).toBe('Overridden');
+    // The default figure is not rendered when overridden.
+    expect(container.querySelector('figure.social-embed')).toBeNull();
   });
 
   // ── Text Modifiers: uppercase, superscript, subscript ────────────

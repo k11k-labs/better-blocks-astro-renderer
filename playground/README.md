@@ -9,8 +9,10 @@ cd playground
 docker compose up --build
 ```
 
-- Strapi: http://localhost:1337/admin
+- Strapi: http://localhost:1339/admin
 - Astro app: http://localhost:4321
+
+> The Docker stack publishes Strapi on host port **1339** (container port stays 1337) so it can run alongside other Better Blocks stacks — the plugin playground (:1337) and the React renderer playground (:1338). Containers are named `better-blocks-astro-renderer-strapi` / `better-blocks-astro-renderer-astro-app` under the `better-blocks-astro-renderer` compose project.
 
 On first run, create an admin account in Strapi, then follow the "Strapi setup" steps below.
 
