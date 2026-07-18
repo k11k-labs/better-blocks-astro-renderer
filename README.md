@@ -246,6 +246,26 @@ const { blocks } = Astro.props;
 <BlocksRenderer content={blocks} blocks={{ 'social-embed': MySocialEmbed }} />
 ```
 
+### Audio
+
+Block-level `audio` nodes embed an audio file — from the Strapi Media Library or a raw URL — using a native HTML5 `<audio>` player, with **zero client-side JavaScript** (the native player is enough). The `file.url` is rendered as-is: for Media-Library assets the editor already stores the backend-prefixed URL (same convention as the `image`/`button` blocks), so the renderer never re-prefixes it.
+
+The block renders a `<figure class="bb-audio align-{alignment}">` (alignment defaults to `center`) containing an `<audio class="bb-audio-player">` element. The `player` flags map 1:1 to the element: `controls` (default `true`), `autoplay`, `loop`, and `preload` (`none` / `metadata` / `auto`). An optional `title` renders above the player and an optional `caption` below it, each in a `<figcaption>`. For accessibility the player gets an `aria-label` (the `title`, or `"Audio player"` when absent) and an `aria-describedby` pointing at the caption, and inside the `<audio>` element a fallback line plus a download link cover unsupported formats/browsers. The alignment cross-axis placement (`left`/`center`/`right` → `flex-start`/`center`/`flex-end`; `none` = full-width, flows inline) ships as inline styles, and the markup — `bb-audio`, `bb-audio-player`, `bb-audio-title`, `bb-audio-caption` class hooks included — is byte-for-byte compatible with the [React renderer](https://github.com/k11k-labs/better-blocks-react-renderer), so a shared CSS theme covers both.
+
+The baseline appearance (flex column, centered, `max-width: 32rem` player) ships as inline styles — retheme it from your own CSS via the stable `bb-audio*` classes.
+
+To fully control the markup, override the `audio` block. It receives `file`, `title`, `caption`, `player`, and `alignment`:
+
+```astro
+---
+import { BlocksRenderer } from '@k11k/better-blocks-astro-renderer';
+import MyAudio from '../components/MyAudio.astro';
+const { blocks } = Astro.props;
+---
+
+<BlocksRenderer content={blocks} blocks={{ audio: MyAudio }} />
+```
+
 ## Supported Blocks
 
 | Block                           | Default element      | Source                      |
@@ -267,6 +287,7 @@ const { blocks } = Astro.props;
 | `details` (collapsible)         | `<details>`          | Better Blocks               |
 | `button` (CTA / file download)  | `<a>` / `<span>`     | Better Blocks               |
 | `social-embed`                  | `<figure>`           | Better Blocks               |
+| `audio` (HTML5 player)          | `<figure><audio>`    | Better Blocks               |
 
 ### Block properties
 
@@ -306,6 +327,11 @@ const { blocks } = Astro.props;
 | `oembed`       | social-embed              | Fetched oEmbed payload `{ html, title, author, authorUrl, thumbnailUrl, providerName, width, height }` |
 | `alignment`    | social-embed              | `left`, `center` (default), or `right`                                                                 |
 | `caption`      | social-embed              | Optional caption rendered in a `<figcaption>`                                                          |
+| `file`         | audio                     | `{ url, id?, name?, ext?, hash?, mime?, size?, provider?, duration? }` (`url` is rendered as-is)       |
+| `title`        | audio                     | Optional heading rendered above the player                                                             |
+| `caption`      | audio                     | Optional caption rendered below the player in a `<figcaption>`                                         |
+| `player`       | audio                     | `{ controls (default true), autoplay, loop, preload }` (mapped 1:1 to `<audio>`)                       |
+| `alignment`    | audio                     | `left`, `center` (default), `right`, or `none` (full-width, inline)                                    |
 
 ## Supported Modifiers
 
@@ -434,6 +460,11 @@ import type {
   SocialPlatform,
   SocialEmbedAlignment,
   SocialEmbedOembed,
+  AudioNode,
+  AudioAlignment,
+  AudioFile,
+  AudioPlayer,
+  AudioPreload,
   TextAlign,
   CustomBlocksConfig,
   CustomModifiersConfig,

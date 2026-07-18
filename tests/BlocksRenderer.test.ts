@@ -26,6 +26,7 @@ import CustomCallout from './fixtures/CustomCallout.astro';
 import CustomDetails from './fixtures/CustomDetails.astro';
 import CustomButton from './fixtures/CustomButton.astro';
 import CustomSocialEmbed from './fixtures/CustomSocialEmbed.astro';
+import CustomAudio from './fixtures/CustomAudio.astro';
 import CustomBold from './fixtures/CustomBold.astro';
 import CustomColor from './fixtures/CustomColor.astro';
 import CustomBg from './fixtures/CustomBg.astro';
@@ -1335,6 +1336,161 @@ describe('BlocksRenderer', () => {
     expect(el?.querySelector('.custom-social-caption')?.textContent).toBe('Overridden');
     // The default figure is not rendered when overridden.
     expect(container.querySelector('figure.social-embed')).toBeNull();
+  });
+
+  // ── Audio (Media Library / raw URL + HTML5 player) ───────────────
+
+  it('renders a native <audio> inside an aligned figure with player flags mapped 1:1', async () => {
+    const { container } = await render([
+      {
+        type: 'audio',
+        file: { id: 123, url: '/uploads/episode.mp3', mime: 'audio/mpeg' },
+        player: { autoplay: false, loop: true, controls: true, preload: 'auto' },
+        alignment: 'right',
+      },
+    ]);
+    const figure = container.querySelector('figure.bb-audio');
+    expect(figure).not.toBeNull();
+    expect(figure?.classList.contains('align-right')).toBe(true);
+    const audio = figure?.querySelector('audio.bb-audio-player');
+    expect(audio).not.toBeNull();
+    expect(audio?.getAttribute('src')).toBe('/uploads/episode.mp3');
+    expect(audio?.hasAttribute('controls')).toBe(true);
+    expect(audio?.hasAttribute('loop')).toBe(true);
+    // autoplay: false → attribute omitted entirely.
+    expect(audio?.hasAttribute('autoplay')).toBe(false);
+    expect(audio?.getAttribute('preload')).toBe('auto');
+  });
+
+  it('defaults alignment to center, controls to true, and preload to metadata', async () => {
+    const { container } = await render([{ type: 'audio', file: { url: '/uploads/clip.mp3' } }]);
+    const figure = container.querySelector('figure.bb-audio');
+    expect(figure?.classList.contains('align-center')).toBe(true);
+    const audio = figure?.querySelector('audio');
+    expect(audio?.hasAttribute('controls')).toBe(true);
+    expect(audio?.getAttribute('preload')).toBe('metadata');
+  });
+
+  it('omits controls when player.controls is false', async () => {
+    const { container } = await render([
+      {
+        type: 'audio',
+        file: { url: '/uploads/clip.mp3' },
+        player: { controls: false },
+      },
+    ]);
+    expect(container.querySelector('figure.bb-audio audio')?.hasAttribute('controls')).toBe(false);
+  });
+
+  it('renders an optional title above and caption below the player', async () => {
+    const { container } = await render([
+      {
+        type: 'audio',
+        file: { id: 7, url: '/uploads/ep.mp3' },
+        title: 'Episode 1: Introduction',
+        caption: 'Our first podcast episode',
+      },
+    ]);
+    const figure = container.querySelector('figure.bb-audio');
+    expect(figure?.querySelector('.bb-audio-title')?.textContent?.trim()).toBe(
+      'Episode 1: Introduction'
+    );
+    expect(figure?.querySelector('.bb-audio-caption')?.textContent?.trim()).toBe(
+      'Our first podcast episode'
+    );
+  });
+
+  it('does not render title/caption figcaptions when absent', async () => {
+    const { container } = await render([{ type: 'audio', file: { url: '/uploads/clip.mp3' } }]);
+    expect(container.querySelector('.bb-audio-title')).toBeNull();
+    expect(container.querySelector('.bb-audio-caption')).toBeNull();
+  });
+
+  it('wires aria-label to the title and aria-describedby to the caption', async () => {
+    const { container } = await render([
+      {
+        type: 'audio',
+        file: { id: 42, url: '/uploads/ep.mp3' },
+        title: 'My Episode',
+        caption: 'A caption',
+      },
+    ]);
+    const audio = container.querySelector('figure.bb-audio audio');
+    expect(audio?.getAttribute('aria-label')).toBe('My Episode');
+    const capId = audio?.getAttribute('aria-describedby');
+    expect(capId).toBe('bb-audio-cap-42');
+    expect(container.querySelector(`#${capId}`)?.textContent?.trim()).toBe('A caption');
+  });
+
+  it('falls back to an "Audio player" aria-label when no title is present', async () => {
+    const { container } = await render([{ type: 'audio', file: { url: '/uploads/clip.mp3' } }]);
+    const audio = container.querySelector('figure.bb-audio audio');
+    expect(audio?.getAttribute('aria-label')).toBe('Audio player');
+    // No caption → no aria-describedby.
+    expect(audio?.hasAttribute('aria-describedby')).toBe(false);
+  });
+
+  it('keys the caption id off the file hash when no id is present (raw-URL block)', async () => {
+    const { container } = await render([
+      {
+        type: 'audio',
+        file: { url: 'https://cdn.example.com/song.mp3', hash: 'song_abc123' },
+        caption: 'From a raw URL',
+      },
+    ]);
+    const audio = container.querySelector('figure.bb-audio audio');
+    expect(audio?.getAttribute('aria-describedby')).toBe('bb-audio-cap-song_abc123');
+  });
+
+  it('falls back to the block index for the caption id when id and hash are both absent', async () => {
+    const { container } = await render([
+      { type: 'paragraph', children: [{ type: 'text', text: 'lead-in' }] },
+      {
+        type: 'audio',
+        file: { url: 'https://cdn.example.com/a.mp3' },
+        caption: 'First',
+      },
+      {
+        type: 'audio',
+        file: { url: 'https://cdn.example.com/b.mp3' },
+        caption: 'Second',
+      },
+    ]);
+    const audios = container.querySelectorAll('figure.bb-audio audio');
+    // Distinct, index-derived ids — no duplicate `bb-audio-cap-undefined` clash.
+    expect(audios[0]?.getAttribute('aria-describedby')).toBe('bb-audio-cap-1');
+    expect(audios[1]?.getAttribute('aria-describedby')).toBe('bb-audio-cap-2');
+  });
+
+  it('includes fallback text and a download link inside <audio>', async () => {
+    const { container } = await render([{ type: 'audio', file: { url: '/uploads/episode.mp3' } }]);
+    const audio = container.querySelector('figure.bb-audio audio');
+    expect(audio?.textContent).toContain('Your browser does not support the audio element');
+    const download = audio?.querySelector('a');
+    expect(download?.getAttribute('href')).toBe('/uploads/episode.mp3');
+  });
+
+  it('routes audio through a custom renderer when provided', async () => {
+    const { container } = await render(
+      [
+        {
+          type: 'audio',
+          file: { id: 9, url: '/uploads/ep.mp3' },
+          title: 'Custom title',
+          caption: 'Custom caption',
+          alignment: 'left',
+        },
+      ],
+      { blocks: { audio: CustomAudio } }
+    );
+    const el = container.querySelector('div.custom-audio');
+    expect(el).not.toBeNull();
+    expect(el?.getAttribute('data-alignment')).toBe('left');
+    expect(el?.getAttribute('data-url')).toBe('/uploads/ep.mp3');
+    expect(el?.querySelector('.custom-audio-title')?.textContent).toBe('Custom title');
+    expect(el?.querySelector('.custom-audio-caption')?.textContent).toBe('Custom caption');
+    // The default figure is not rendered when overridden.
+    expect(container.querySelector('figure.bb-audio')).toBeNull();
   });
 
   // ── Text Modifiers: uppercase, superscript, subscript ────────────

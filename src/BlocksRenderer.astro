@@ -10,7 +10,13 @@ const isValid = Array.isArray(content) && content.length > 0;
 
 {
   isValid &&
-    content.map((block) => (
-      <Block block={block} blocks={blocks} modifiers={modifiers} diagramTheme={diagramTheme} />
+    content.map((block, index) => (
+      <Block
+        block={block}
+        blocks={blocks}
+        modifiers={modifiers}
+        diagramTheme={diagramTheme}
+        index={index}
+      />
     ))
 }
