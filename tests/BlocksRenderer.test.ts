@@ -1157,12 +1157,17 @@ describe('BlocksRenderer', () => {
         alignment: 'center',
       },
     ]);
-    const figure = container.querySelector('figure.social-embed');
+    const figure = container.querySelector('figure.bb-social-embed');
     expect(figure).not.toBeNull();
+    // Class hooks mirror the React renderer.
+    expect(figure?.classList.contains('bb-social-embed-twitter')).toBe(true);
+    expect(figure?.classList.contains('social-embed')).toBe(true);
     expect(figure?.classList.contains('align-center')).toBe(true);
     expect(figure?.getAttribute('aria-label')).toBe('Twitter post by Jane Doe');
-    // Embed markup is emitted verbatim (not sanitized).
-    expect(figure?.querySelector('blockquote.twitter-tweet')?.textContent).toContain('Hello world');
+    // Embed markup is emitted verbatim (not sanitized) in the `bb-social-embed-html` wrapper.
+    expect(
+      figure?.querySelector('.bb-social-embed-html blockquote.twitter-tweet')?.textContent
+    ).toContain('Hello world');
     // Tagged for the lazy widget-script loader.
     expect(figure?.getAttribute('data-bb-social-embed')).toBe('');
     expect(figure?.getAttribute('data-bb-social-platform')).toBe('twitter');
@@ -1258,17 +1263,18 @@ describe('BlocksRenderer', () => {
         },
       },
     ]);
-    const link = container.querySelector('figure.social-embed a.social-embed-fallback');
+    const link = container.querySelector('figure.bb-social-embed a.bb-social-embed-fallback');
     expect(link?.getAttribute('href')).toBe('https://www.tiktok.com/@user/video/1');
     expect(link?.getAttribute('rel')).toBe('noopener noreferrer');
-    expect(link?.querySelector('.social-embed-fallback-provider')?.textContent).toBe('TikTok');
-    expect(link?.querySelector('.social-embed-fallback-title')?.textContent).toBe('Cool video');
-    expect(link?.querySelector('img.social-embed-fallback-thumb')?.getAttribute('src')).toBe(
+    expect(link?.querySelector('.bb-social-embed-fallback-provider')?.textContent).toBe('TikTok');
+    // Title prefers oembed.title over the descriptive label.
+    expect(link?.querySelector('.bb-social-embed-fallback-title')?.textContent).toBe('Cool video');
+    expect(link?.querySelector('img.bb-social-embed-fallback-thumb')?.getAttribute('src')).toBe(
       'https://cdn.example.com/thumb.jpg'
     );
     // A pure fallback needs no widget script.
     expect(
-      container.querySelector('figure.social-embed')?.hasAttribute('data-bb-social-embed')
+      container.querySelector('figure.bb-social-embed')?.hasAttribute('data-bb-social-embed')
     ).toBe(false);
   });
 
@@ -1276,9 +1282,11 @@ describe('BlocksRenderer', () => {
     const { container } = await render([
       { type: 'social-embed', platform: 'pinterest', url: 'https://pin.it/abc' },
     ]);
-    const figure = container.querySelector('figure.social-embed');
+    const figure = container.querySelector('figure.bb-social-embed');
     expect(figure?.getAttribute('aria-label')).toBe('Pinterest post');
-    expect(figure?.querySelector('.social-embed-fallback-provider')?.textContent).toBe('Pinterest');
+    expect(figure?.querySelector('.bb-social-embed-fallback-provider')?.textContent).toBe(
+      'Pinterest'
+    );
   });
 
   it('uses a nicely-cased platform label when oembed.providerName is absent', async () => {
@@ -1291,9 +1299,18 @@ describe('BlocksRenderer', () => {
       },
     ]);
     // "LinkedIn", not a naive "Linkedin".
-    expect(container.querySelector('figure.social-embed')?.getAttribute('aria-label')).toBe(
+    expect(container.querySelector('figure.bb-social-embed')?.getAttribute('aria-label')).toBe(
       'LinkedIn post'
     );
+  });
+
+  it('labels Twitter as "X" by default (mirrors the React renderer)', async () => {
+    const { container } = await render([
+      { type: 'social-embed', platform: 'twitter', url: 'https://x.com/user/status/1' },
+    ]);
+    const figure = container.querySelector('figure.bb-social-embed');
+    expect(figure?.getAttribute('aria-label')).toBe('X post');
+    expect(figure?.querySelector('.bb-social-embed-fallback-provider')?.textContent).toBe('X');
   });
 
   it('routes social-embed through a custom renderer when provided', async () => {

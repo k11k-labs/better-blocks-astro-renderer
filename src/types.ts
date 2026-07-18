@@ -265,6 +265,8 @@ export type SocialPlatform =
   | 'linkedin'
   | 'pinterest';
 
+export type SocialEmbedAlignment = 'left' | 'center' | 'right';
+
 /**
  * oEmbed payload fetched server-side by the plugin at author time. Every field
  * is optional — providers vary in what they return (e.g. `thumbnailUrl` is
@@ -286,11 +288,11 @@ export type SocialEmbedNode = {
   type: 'social-embed';
   platform: SocialPlatform;
   url: string;
-  /** OPTIONAL author-pasted embed markup that overrides `oembed.html`. Trusted. */
+  /** Author-pasted manual override, takes priority over `oembed.html`. Trusted. */
   embedCode?: string;
-  /** OPTIONAL oEmbed payload fetched server-side at author time. */
+  /** Fetched server-side by the plugin at author time. */
   oembed?: SocialEmbedOembed;
-  alignment?: 'left' | 'center' | 'right';
+  alignment?: SocialEmbedAlignment;
   caption?: string;
   /** Void-node placeholder emitted by the editor — ignored when rendering. */
   children?: [{ type: 'text'; text: '' }];

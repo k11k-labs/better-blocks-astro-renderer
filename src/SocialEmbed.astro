@@ -21,7 +21,7 @@ const alignment = node.alignment ?? 'center';
 const source = getSocialEmbedSource(node);
 // Trusted markup (platform oEmbed / author-pasted embed code). It intentionally
 // contains <script>/<iframe>/<blockquote> and must NOT be passed through a
-// sanitizer that strips them — see the README's security note.
+// sanitizer that strips them — see the README's trust-boundary note.
 const html = source.kind === 'html' ? addLazyLoadingToIframes(source.html) : null;
 
 // Lazy widget script only for platforms that ship one AND when we actually
@@ -31,6 +31,19 @@ const needsScript = html !== null && !!SOCIAL_SCRIPTS[node.platform];
 const ariaLabel = getSocialAriaLabel(node);
 const providerName = getSocialProviderName(node);
 const oembed = node.oembed;
+
+// Fallback link-card title: the oEmbed title, else a descriptive label.
+const fallbackLabel = oembed?.author
+  ? `${providerName} post by ${oembed.author}`
+  : `View on ${providerName}`;
+const fallbackTitle = oembed?.title ?? fallbackLabel;
+
+// Mirrors the React renderer: centered embeds get `1rem auto` so the block
+// centers within its column; left/right keep a flush `1rem 0`.
+const figureStyle = {
+  margin: alignment === 'center' ? '1rem auto' : '1rem 0',
+  textAlign: alignment,
+};
 ---
 
 {
@@ -40,107 +53,68 @@ const oembed = node.oembed;
       url={node.url}
       embedCode={node.embedCode}
       oembed={node.oembed}
-      alignment={alignment}
+      alignment={node.alignment}
       caption={node.caption}
     />
   ) : (
     <figure
-      class={`social-embed align-${alignment}`}
+      class={`bb-social-embed bb-social-embed-${node.platform} social-embed align-${alignment}`}
       aria-label={ariaLabel}
+      style={figureStyle}
       data-bb-social-embed={needsScript ? '' : undefined}
       data-bb-social-platform={needsScript ? node.platform : undefined}
     >
       {html !== null ? (
-        <div class="social-embed-body" set:html={html} />
+        <div class="bb-social-embed-html" set:html={html} />
       ) : (
-        /* No embedCode/oembed.html — graceful link card fallback. */
-        <a class="social-embed-fallback" href={node.url} target="_blank" rel="noopener noreferrer">
+        /* No embedCode/oembed.html — graceful, always-working link card. */
+        <a
+          class="bb-social-embed-fallback"
+          href={node.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            padding: '0.75rem 1rem',
+            border: '1px solid #d0d7de',
+            borderRadius: '0.5rem',
+            textDecoration: 'none',
+            color: 'inherit',
+            textAlign: 'left',
+          }}
+        >
           {oembed?.thumbnailUrl && (
             <img
-              class="social-embed-fallback-thumb"
+              class="bb-social-embed-fallback-thumb"
               src={oembed.thumbnailUrl}
               alt=""
               loading="lazy"
+              width={48}
+              height={48}
+              style={{ borderRadius: '0.25rem', objectFit: 'cover', flexShrink: 0 }}
             />
           )}
-          <span class="social-embed-fallback-body">
-            <span class="social-embed-fallback-provider">{providerName}</span>
-            {oembed?.title && <span class="social-embed-fallback-title">{oembed.title}</span>}
-            {oembed?.author && <span class="social-embed-fallback-author">by {oembed.author}</span>}
+          <span class="bb-social-embed-fallback-body">
+            <span
+              class="bb-social-embed-fallback-title"
+              style={{ display: 'block', fontWeight: 600 }}
+            >
+              {fallbackTitle}
+            </span>
+            <span
+              class="bb-social-embed-fallback-provider"
+              style={{ opacity: 0.7, fontSize: '0.875em' }}
+            >
+              {providerName}
+            </span>
           </span>
         </a>
       )}
-      {node.caption && <figcaption class="social-embed-caption">{node.caption}</figcaption>}
+      {node.caption && <figcaption class="bb-social-embed-caption">{node.caption}</figcaption>}
     </figure>
   )
 }
 
 {needsScript && <SocialEmbedScript />}
-
-<style>
-  .social-embed {
-    margin: 1rem 0;
-  }
-  .social-embed.align-center {
-    text-align: center;
-  }
-  .social-embed.align-left {
-    text-align: left;
-  }
-  .social-embed.align-right {
-    text-align: right;
-  }
-  /* Centre the provider blockquote/iframe within a centered figure. */
-  .social-embed.align-center :global(blockquote),
-  .social-embed.align-center :global(iframe) {
-    margin-left: auto;
-    margin-right: auto;
-  }
-  .social-embed-caption {
-    margin-top: 0.5rem;
-    font-size: 0.875em;
-    color: #666;
-  }
-
-  /* Fallback link card (no embedCode / oembed.html available). */
-  .social-embed-fallback {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.75rem;
-    max-width: 100%;
-    padding: 0.75rem 1rem;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    text-decoration: none;
-    color: inherit;
-    text-align: left;
-  }
-  .social-embed-fallback:hover {
-    border-color: #bbb;
-  }
-  .social-embed-fallback-thumb {
-    width: 48px;
-    height: 48px;
-    object-fit: cover;
-    border-radius: 6px;
-    flex-shrink: 0;
-  }
-  .social-embed-fallback-body {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-  }
-  .social-embed-fallback-provider {
-    font-size: 0.75em;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #888;
-  }
-  .social-embed-fallback-title {
-    font-weight: 600;
-  }
-  .social-embed-fallback-author {
-    font-size: 0.875em;
-    color: #666;
-  }
-</style>

@@ -35,6 +35,7 @@ export type {
   ButtonStyle,
   SocialEmbedNode,
   SocialPlatform,
+  SocialEmbedAlignment,
   SocialEmbedOembed,
   TextAlign,
   StyleValue,

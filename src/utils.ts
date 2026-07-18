@@ -255,8 +255,9 @@ export function addLazyLoadingToIframes(html: string): string {
 }
 
 // Nicely-cased display names, used when `oembed.providerName` is absent.
+// Mirrors the React renderer (Twitter now presents as "X").
 const PLATFORM_LABELS: Record<SocialPlatform, string> = {
-  twitter: 'Twitter',
+  twitter: 'X',
   instagram: 'Instagram',
   facebook: 'Facebook',
   tiktok: 'TikTok',

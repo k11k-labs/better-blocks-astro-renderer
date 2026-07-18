@@ -42,14 +42,14 @@ try {
     <div style="max-width: 720px; margin: 0 auto; padding: 24px; font-family: system-ui;">
       <h1>Better Blocks Renderer Playground</h1>
       <p style="color: #666; margin-bottom: 32px;">
-        Fetching articles from Strapi at <code>localhost:1337</code> and rendering with
+        Fetching articles from Strapi at <code>localhost:1339</code> and rendering with
         <code>@k11k/better-blocks-astro-renderer</code> — native Astro, zero client-side JavaScript.
       </p>
 
       {
         error && (
           <p style="color: red;">
-            Error: {error}. Make sure Strapi is running on port 1337.
+            Error: {error}. Make sure Strapi is running on port 1339.
           </p>
         )
       }
@@ -58,7 +58,7 @@ try {
         !error && articles.length === 0 && (
           <p>
             No published articles found. Create one in
-            <a href="http://localhost:1337/admin" target="_blank" rel="noopener noreferrer">
+            <a href="http://localhost:1339/admin" target="_blank" rel="noopener noreferrer">
               Strapi admin
             </a>
             and publish it.
