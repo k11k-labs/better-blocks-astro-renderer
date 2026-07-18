@@ -1,0 +1,97 @@
+diff --git a/node_modules/beautiful-mermaid/dist/index.js b/node_modules/beautiful-mermaid/dist/index.js
+index e7e087b..5107ee5 100644
+--- a/node_modules/beautiful-mermaid/dist/index.js
++++ b/node_modules/beautiful-mermaid/dist/index.js
+@@ -7329,18 +7329,34 @@ function layoutSequenceDiagram(diagram, _options = {}) {
+     const textW = estimateTextWidth(a.label, FONT_SIZES.nodeLabel, FONT_WEIGHTS.nodeLabel);
+     return Math.max(textW + SEQ.actorPadX * 2, 80);
+   });
+-  const actorCenterX = [];
+-  let currentX = SEQ.padding + actorWidths[0] / 2;
++  const actorIndex = /* @__PURE__ */ new Map();
+   for (let i = 0; i < diagram.actors.length; i++) {
+-    if (i > 0) {
+-      const minGap = Math.max(SEQ.actorGap, (actorWidths[i - 1] + actorWidths[i]) / 2 + 40);
+-      currentX += minGap;
++    actorIndex.set(diagram.actors[i].id, i);
++  }
++  const gaps = new Array(diagram.actors.length).fill(0);
++  for (let i = 1; i < diagram.actors.length; i++) {
++    gaps[i] = Math.max(SEQ.actorGap, (actorWidths[i - 1] + actorWidths[i]) / 2 + 40);
++  }
++  for (const msg of diagram.messages) {
++    if (msg.from === msg.to) continue;
++    const a = actorIndex.get(msg.from);
++    const b = actorIndex.get(msg.to);
++    if (a == null || b == null) continue;
++    const lo = Math.min(a, b);
++    const hi = Math.max(a, b);
++    const needed = estimateTextWidth(msg.label ?? "", FONT_SIZES.edgeLabel, FONT_WEIGHTS.edgeLabel) + SEQ.actorPadX * 2;
++    let span = 0;
++    for (let i = lo + 1; i <= hi; i++) span += gaps[i];
++    if (needed > span) {
++      const add = (needed - span) / (hi - lo);
++      for (let i = lo + 1; i <= hi; i++) gaps[i] += add;
+     }
+-    actorCenterX.push(currentX);
+   }
+-  const actorIndex = /* @__PURE__ */ new Map();
++  const actorCenterX = [];
++  let currentX = SEQ.padding + actorWidths[0] / 2;
+   for (let i = 0; i < diagram.actors.length; i++) {
+-    actorIndex.set(diagram.actors[i].id, i);
++    if (i > 0) currentX += gaps[i];
++    actorCenterX.push(currentX);
+   }
+   const actorY = SEQ.padding;
+   const actors = diagram.actors.map((a, i) => ({
+@@ -7517,7 +7533,8 @@ function layoutSequenceDiagram(diagram, _options = {}) {
+     };
+   });
+   const notes = positionedNotes;
+-  const diagramBottom = messageY + SEQ.padding;
++  const footerY = messageY;
++  const diagramBottom = footerY + SEQ.actorHeight + SEQ.padding;
+   let globalMinX = SEQ.padding;
+   let globalMaxX = 0;
+   for (const a of actors) {
+@@ -7555,11 +7572,20 @@ function layoutSequenceDiagram(diagram, _options = {}) {
+     for (const n of notes) n.x += shiftX;
+     for (let i = 0; i < actorCenterX.length; i++) actorCenterX[i] += shiftX;
+   }
++  const footerActors = diagram.actors.map((a, i) => ({
++    id: a.id,
++    label: a.label,
++    type: a.type,
++    x: actorCenterX[i],
++    y: footerY,
++    width: actorWidths[i],
++    height: SEQ.actorHeight
++  }));
+   const lifelines = diagram.actors.map((a, i) => ({
+     actorId: a.id,
+     x: actorCenterX[i],
+     topY: actorY + SEQ.actorHeight,
+-    bottomY: diagramBottom - SEQ.padding
++    bottomY: footerY
+   }));
+   const diagramWidth = globalMaxX + shiftX + SEQ.padding;
+   const diagramHeight = diagramBottom;
+@@ -7567,6 +7593,7 @@ function layoutSequenceDiagram(diagram, _options = {}) {
+     width: Math.max(diagramWidth, 200),
+     height: Math.max(diagramHeight, 100),
+     actors,
++    footerActors,
+     lifelines,
+     messages,
+     activations,
+@@ -7601,6 +7628,9 @@ function renderSequenceSvg(diagram, colors, font = "Inter", transparent = false)
+   for (const actor of diagram.actors) {
+     parts.push(renderActor(actor));
+   }
++  for (const actor of diagram.footerActors ?? []) {
++    parts.push(renderActor(actor));
++  }
+   parts.push("</svg>");
+   return parts.join("\n");
+ }

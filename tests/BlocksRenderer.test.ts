@@ -844,6 +844,55 @@ describe('BlocksRenderer', () => {
     expect(container.querySelector('div.mermaid-diagram')).toBeNull();
   });
 
+  it('mirrors sequence-diagram participant boxes at the top and footer', async () => {
+    const { container } = await render([
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        value:
+          'sequenceDiagram\n' +
+          '  Astro->>Renderer: <BlocksRenderer content={blocks} />\n' +
+          '  Renderer->>Mermaid: renderMermaidSVG(value)\n' +
+          '  Mermaid-->>Renderer: <svg>...</svg>\n' +
+          '  Renderer-->>Astro: inline SVG (no hydration)',
+        children: [{ type: 'text', text: '' }],
+      },
+    ]);
+    const svg = container.querySelector('div.mermaid-diagram svg');
+    expect(svg).not.toBeNull();
+    // Each of the 3 participants is drawn twice — once in the header row and
+    // once mirrored in the footer row (matching mermaid.js), so 6 groups total.
+    const actorGroups = svg!.querySelectorAll('g.actor');
+    expect(actorGroups.length).toBe(6);
+    // The two boxes for a participant sit at distinct vertical positions.
+    const rendererYs = [...actorGroups]
+      .filter((g) => g.getAttribute('data-label') === 'Renderer')
+      .map((g) => Number(g.querySelector('rect')?.getAttribute('y')));
+    expect(rendererYs.length).toBe(2);
+    expect(new Set(rendererYs).size).toBe(2);
+  });
+
+  it('widens actor spacing to fit long sequence-diagram message labels', async () => {
+    const svgWidth = async (label: string) => {
+      const { container } = await render([
+        {
+          type: 'diagram',
+          format: 'mermaid',
+          value: `sequenceDiagram\n  A->>B: ${label}`,
+          children: [{ type: 'text', text: '' }],
+        },
+      ]);
+      return Number(container.querySelector('div.mermaid-diagram svg')?.getAttribute('width'));
+    };
+    // A long message label must push the two lifelines apart so it fits in its
+    // lane instead of overflowing across the lifelines.
+    const shortW = await svgWidth('hi');
+    const longW = await svgWidth(
+      'a very long message label that has to fit between the two lifelines'
+    );
+    expect(longW).toBeGreaterThan(shortW);
+  });
+
   // ── Callouts (Admonitions) ───────────────────────────────────────
 
   it('renders a callout with the localized variant label and nested content', async () => {
