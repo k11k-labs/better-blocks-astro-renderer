@@ -1,0 +1,146 @@
+---
+import type { CustomBlocksConfig, SocialEmbedNode } from './types';
+import {
+  SOCIAL_SCRIPTS,
+  addLazyLoadingToIframes,
+  getSocialAriaLabel,
+  getSocialEmbedSource,
+  getSocialProviderName,
+} from './utils';
+import SocialEmbedScript from './SocialEmbedScript.astro';
+
+interface Props {
+  node: SocialEmbedNode;
+  blocks?: CustomBlocksConfig;
+}
+
+const { node, blocks } = Astro.props;
+const SocialComp = blocks?.['social-embed'] as any;
+
+const alignment = node.alignment ?? 'center';
+const source = getSocialEmbedSource(node);
+// Trusted markup (platform oEmbed / author-pasted embed code). It intentionally
+// contains <script>/<iframe>/<blockquote> and must NOT be passed through a
+// sanitizer that strips them — see the README's security note.
+const html = source.kind === 'html' ? addLazyLoadingToIframes(source.html) : null;
+
+// Lazy widget script only for platforms that ship one AND when we actually
+// rendered embed markup (not the fallback link, which needs no script).
+const needsScript = html !== null && !!SOCIAL_SCRIPTS[node.platform];
+
+const ariaLabel = getSocialAriaLabel(node);
+const providerName = getSocialProviderName(node);
+const oembed = node.oembed;
+---
+
+{
+  SocialComp ? (
+    <SocialComp
+      platform={node.platform}
+      url={node.url}
+      embedCode={node.embedCode}
+      oembed={node.oembed}
+      alignment={alignment}
+      caption={node.caption}
+    />
+  ) : (
+    <figure
+      class={`social-embed align-${alignment}`}
+      aria-label={ariaLabel}
+      data-bb-social-embed={needsScript ? '' : undefined}
+      data-bb-social-platform={needsScript ? node.platform : undefined}
+    >
+      {html !== null ? (
+        <div class="social-embed-body" set:html={html} />
+      ) : (
+        /* No embedCode/oembed.html — graceful link card fallback. */
+        <a class="social-embed-fallback" href={node.url} target="_blank" rel="noopener noreferrer">
+          {oembed?.thumbnailUrl && (
+            <img
+              class="social-embed-fallback-thumb"
+              src={oembed.thumbnailUrl}
+              alt=""
+              loading="lazy"
+            />
+          )}
+          <span class="social-embed-fallback-body">
+            <span class="social-embed-fallback-provider">{providerName}</span>
+            {oembed?.title && <span class="social-embed-fallback-title">{oembed.title}</span>}
+            {oembed?.author && <span class="social-embed-fallback-author">by {oembed.author}</span>}
+          </span>
+        </a>
+      )}
+      {node.caption && <figcaption class="social-embed-caption">{node.caption}</figcaption>}
+    </figure>
+  )
+}
+
+{needsScript && <SocialEmbedScript />}
+
+<style>
+  .social-embed {
+    margin: 1rem 0;
+  }
+  .social-embed.align-center {
+    text-align: center;
+  }
+  .social-embed.align-left {
+    text-align: left;
+  }
+  .social-embed.align-right {
+    text-align: right;
+  }
+  /* Centre the provider blockquote/iframe within a centered figure. */
+  .social-embed.align-center :global(blockquote),
+  .social-embed.align-center :global(iframe) {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .social-embed-caption {
+    margin-top: 0.5rem;
+    font-size: 0.875em;
+    color: #666;
+  }
+
+  /* Fallback link card (no embedCode / oembed.html available). */
+  .social-embed-fallback {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    max-width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    text-decoration: none;
+    color: inherit;
+    text-align: left;
+  }
+  .social-embed-fallback:hover {
+    border-color: #bbb;
+  }
+  .social-embed-fallback-thumb {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 6px;
+    flex-shrink: 0;
+  }
+  .social-embed-fallback-body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .social-embed-fallback-provider {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #888;
+  }
+  .social-embed-fallback-title {
+    font-weight: 600;
+  }
+  .social-embed-fallback-author {
+    font-size: 0.875em;
+    color: #666;
+  }
+</style>

@@ -800,6 +800,39 @@
       "children": [{ "type": "text", "text": "" }]
     },
     {
+      "type": "heading",
+      "level": 2,
+      "children": [{ "type": "text", "text": "Social Embeds" }]
+    },
+    {
+      "type": "social-embed",
+      "platform": "twitter",
+      "url": "https://twitter.com/astrodotbuild/status/1719042783834042590",
+      "alignment": "center",
+      "caption": "A tweet embedded via oEmbed — the widget script loads lazily on scroll.",
+      "oembed": {
+        "html": "<blockquote class=\"twitter-tweet\"><p lang=\"en\" dir=\"ltr\">Astro 3.4 is out 🚀</p>&mdash; Astro (@astrodotbuild) <a href=\"https://twitter.com/astrodotbuild/status/1719042783834042590\">October 31, 2023</a></blockquote>",
+        "author": "Astro",
+        "authorUrl": "https://twitter.com/astrodotbuild",
+        "providerName": "Twitter",
+        "width": 550,
+        "height": 400
+      }
+    },
+    {
+      "type": "social-embed",
+      "platform": "tiktok",
+      "url": "https://www.tiktok.com/@example/video/1234567890",
+      "alignment": "center",
+      "caption": "No embedCode/oembed.html → graceful fallback link card.",
+      "oembed": {
+        "author": "Example Creator",
+        "title": "A short clip",
+        "providerName": "TikTok",
+        "thumbnailUrl": "https://placehold.co/120x120/png"
+      }
+    },
+    {
       "type": "paragraph",
       "children": [
         { "type": "text", "text": "All features working! 🎉", "bold": true, "color": "#38A169" }
