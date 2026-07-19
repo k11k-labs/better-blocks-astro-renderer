@@ -353,6 +353,117 @@ export type AudioNode = {
   children?: [{ type: 'text'; text: '' }];
 };
 
+// ── Embed & Video (shared layout) ────────────────────────────────────
+
+/** `left` / `center` (default) / `right` position the box; `none` = full-width. */
+export type MediaAlignment = 'left' | 'center' | 'right' | 'none';
+
+/**
+ * Named aspect ratios plus `custom`. Named values convert `"16:9"` → `16 / 9`;
+ * `custom` uses `customAspectRatio` verbatim (already in `W / H` form).
+ */
+export type MediaAspectRatio = '16:9' | '21:9' | '4:3' | '1:1' | 'custom';
+
+// ── Embed (generic iframe / URL) ─────────────────────────────────────
+
+export type EmbedProvider =
+  | 'youtube'
+  | 'vimeo'
+  | 'loom'
+  | 'wistia'
+  | 'dailymotion'
+  | 'api-video'
+  | 'generic';
+
+/**
+ * Generic third-party embed (YouTube, Vimeo, Loom, …). `embedHtml` is the only
+ * field needed to render — it is sanitized plugin-side (rebuilt from an
+ * attribute allowlist over an https-only `src`, with scripts, event handlers,
+ * inline styles and unknown attributes stripped) and emitted verbatim via
+ * `set:html`. `url` / `iframe` exist only to round-trip the editor UI.
+ */
+export type EmbedNode = {
+  type: 'embed';
+  /** Which input the author used — `"url"` or `"iframe"`. */
+  source?: 'url' | 'iframe';
+  /** Present when `source` is `"url"` — the pasted watch URL. Ignored when rendering. */
+  url?: string;
+  /** Present when `source` is `"iframe"` — the raw paste. Ignored when rendering. */
+  iframe?: string;
+  /** Sanitized `<iframe>` markup — the value to render. */
+  embedHtml: string;
+  /** The `src` of the sanitized iframe (informational). */
+  embedSrc?: string;
+  provider?: EmbedProvider;
+  thumbnail?: string;
+  aspectRatio?: MediaAspectRatio;
+  /** Used verbatim when `aspectRatio` is `"custom"` (e.g. `"3 / 2"`). */
+  customAspectRatio?: string;
+  alignment?: MediaAlignment;
+  caption?: string;
+  title?: string;
+  /** Void-node placeholder emitted by the editor — ignored when rendering. */
+  children?: [{ type: 'text'; text: '' }];
+};
+
+// ── Video (provider-aware) ───────────────────────────────────────────
+
+export type VideoProvider = 'local' | 'mux' | 'api-video' | 'cloudinary' | 'custom';
+
+/** The video asset when sourced from the Media Library. `url` renders as-is. */
+export type VideoFile = {
+  id?: number;
+  url?: string;
+  name?: string;
+  ext?: string;
+  mime?: string;
+  /** Bytes. */
+  size?: number;
+  /** Seconds. */
+  duration?: number;
+  /** `local` | `cloudinary` | … */
+  provider?: string;
+};
+
+/** Native `<video>` player flags, mapped 1:1 to element attributes. */
+export type VideoPlayer = {
+  autoplay?: boolean;
+  loop?: boolean;
+  muted?: boolean;
+  /** Defaults to `true`. */
+  controls?: boolean;
+};
+
+/**
+ * Provider-aware video. Direct file URLs (`local` / `custom`, or a Media-Library
+ * `file`) render as a native `<video>`. HLS/DASH sources (`url` ending `.m3u8` /
+ * `.mpd`, e.g. Mux) only play natively in Safari — this renderer emits the same
+ * native `<video>` (poster + a graceful fallback link elsewhere); override the
+ * `video` block to plug in a cross-browser player (`mux-player`, `hls.js`, …).
+ */
+export type VideoNode = {
+  type: 'video';
+  provider: VideoProvider;
+  /** Direct/stream URL. Preferred source; for Mux, derivable from `playbackId`. */
+  url?: string;
+  assetId?: string;
+  /** Mux public playback id — enough to stream a public-policy asset. */
+  playbackId?: string;
+  file?: VideoFile;
+  poster?: string;
+  title?: string;
+  caption?: string;
+  /** URL of a WebVTT captions file — rendered as a `<track kind="captions">`. */
+  transcript?: string;
+  player?: VideoPlayer;
+  alignment?: MediaAlignment;
+  aspectRatio?: MediaAspectRatio;
+  /** Used verbatim when `aspectRatio` is `"custom"` (e.g. `"3 / 2"`). */
+  customAspectRatio?: string;
+  /** Void-node placeholder emitted by the editor — ignored when rendering. */
+  children?: [{ type: 'text'; text: '' }];
+};
+
 export type BlockNode =
   | ParagraphNode
   | HeadingNode
@@ -369,7 +480,9 @@ export type BlockNode =
   | DetailsNode
   | ButtonElement
   | SocialEmbedNode
-  | AudioNode;
+  | AudioNode
+  | EmbedNode
+  | VideoNode;
 
 export type BlocksContent = BlockNode[];
 
@@ -413,6 +526,8 @@ export type AstroComponentFactory = (...args: any[]) => any;
  * - `button` — `{ label; buttonType; alignment?; link?; file?; showFileSize?; showFileIcon?; style?; cssClass? }`
  * - `social-embed` — `{ platform; url; embedCode?; oembed?; alignment?; caption? }`
  * - `audio` — `{ file; title?; caption?; player?; alignment? }`
+ * - `embed` — `{ embedHtml; embedSrc?; provider?; thumbnail?; aspectRatio?; customAspectRatio?; alignment?; caption?; title? }`
+ * - `video` — `{ provider; url?; playbackId?; assetId?; file?; poster?; title?; caption?; transcript?; player?; alignment?; aspectRatio?; customAspectRatio? }`
  */
 export type CustomBlocksConfig = Partial<{
   paragraph: AstroComponentFactory;
@@ -436,6 +551,8 @@ export type CustomBlocksConfig = Partial<{
   button: AstroComponentFactory;
   'social-embed': AstroComponentFactory;
   audio: AstroComponentFactory;
+  embed: AstroComponentFactory;
+  video: AstroComponentFactory;
 }>;
 
 /**

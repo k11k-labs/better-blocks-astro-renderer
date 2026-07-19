@@ -498,6 +498,70 @@
     {
       "type": "heading",
       "level": 2,
+      "children": [{ "type": "text", "text": "Embed (generic iframe)" }]
+    },
+    {
+      "type": "paragraph",
+      "children": [
+        {
+          "type": "text",
+          "text": "The new embed block renders a provider's sanitized iframe verbatim inside an aspect-ratio box — no client-side JavaScript."
+        }
+      ]
+    },
+    {
+      "type": "embed",
+      "source": "url",
+      "provider": "vimeo",
+      "url": "https://vimeo.com/76979871",
+      "embedSrc": "https://player.vimeo.com/video/76979871",
+      "embedHtml": "<iframe src=\"https://player.vimeo.com/video/76979871\" title=\"Vimeo video player\" allow=\"autoplay; fullscreen; picture-in-picture\" allowfullscreen></iframe>",
+      "aspectRatio": "16:9",
+      "alignment": "center",
+      "title": "The Mountain",
+      "caption": "A generic Vimeo embed, rendered from its plugin-sanitized iframe.",
+      "children": [{ "type": "text", "text": "" }]
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "children": [{ "type": "text", "text": "Video (provider-aware)" }]
+    },
+    {
+      "type": "paragraph",
+      "children": [
+        {
+          "type": "text",
+          "text": "Direct file URLs render as a native HTML5 player. HLS/DASH (Mux) sources play natively in Safari and fall back to the poster elsewhere."
+        }
+      ]
+    },
+    {
+      "type": "video",
+      "provider": "local",
+      "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+      "poster": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ForBiggerBlazes.jpg",
+      "title": "For Bigger Blazes",
+      "caption": "A native <video> from a direct file URL — zero client-side JavaScript.",
+      "player": { "controls": true, "autoplay": false, "loop": false, "muted": false },
+      "alignment": "center",
+      "aspectRatio": "16:9",
+      "children": [{ "type": "text", "text": "" }]
+    },
+    {
+      "type": "video",
+      "provider": "mux",
+      "playbackId": "DS00Spx1CV902MCtPj5WknGlR102V5HFkDe",
+      "title": "Mux HLS stream",
+      "caption": "An HLS (.m3u8) Mux asset — the stream URL and poster are derived from the playback id.",
+      "player": { "controls": true },
+      "alignment": "center",
+      "aspectRatio": "16:9",
+      "children": [{ "type": "text", "text": "" }]
+    },
+    {
+      "type": "heading",
+      "level": 2,
       "children": [{ "type": "text", "text": "Math (KaTeX / LaTeX)" }]
     },
     {

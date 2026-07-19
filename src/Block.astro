@@ -12,6 +12,8 @@ import Details from './Details.astro';
 import Button from './Button.astro';
 import SocialEmbed from './SocialEmbed.astro';
 import Audio from './Audio.astro';
+import Embed from './Embed.astro';
+import Video from './Video.astro';
 import { getBlockStyle } from './utils';
 
 interface Props {
@@ -159,3 +161,7 @@ const EmbedComp = blocks?.['media-embed'] as any;
 {block.type === 'social-embed' && <SocialEmbed node={block} blocks={blocks} />}
 
 {block.type === 'audio' && <Audio node={block} blocks={blocks} index={index} />}
+
+{block.type === 'embed' && <Embed node={block} blocks={blocks} />}
+
+{block.type === 'video' && <Video node={block} blocks={blocks} index={index} />}

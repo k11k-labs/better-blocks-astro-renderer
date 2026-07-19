@@ -266,6 +266,50 @@ const { blocks } = Astro.props;
 <BlocksRenderer content={blocks} blocks={{ audio: MyAudio }} />
 ```
 
+### Embeds
+
+Block-level `embed` nodes render a generic third-party embed — YouTube, Vimeo, Loom, Wistia, Dailymotion, api.video, or any generic provider — as a plain `<iframe>` with **zero client-side JavaScript**. Only one field is rendered: **`embedHtml`**, the sanitized iframe markup the plugin built at author time. It's rebuilt from an attribute allowlist over an https-only `src`, with scripts, event handlers, inline styles and unknown attributes stripped, so it's emitted verbatim via Astro's `set:html`. The `url` / `iframe` fields exist only to round-trip the editor and are ignored when rendering.
+
+The block renders a `<figure class="bb-embed align-{alignment}">` (alignment defaults to `center`) containing a `<div class="bb-embed-frame">` whose CSS `aspect-ratio` sizes the iframe responsively. Named ratios convert `"16:9"` → `16 / 9`; when `aspectRatio` is `"custom"` the `customAspectRatio` value (e.g. `"3 / 2"`) is used verbatim; both default to `16 / 9`. Alignment positions the box (`left`/`center`/`right` → `flex-start`/`center`/`flex-end`; `none` = full-width). An optional `title` renders above and an optional `caption` below, each in a `<figcaption>`.
+
+Aligned embeds are capped at a retheme-able `--bb-embed-max-width` (default `40rem`); `alignment: none` removes the cap and flows full-width.
+
+> **Trust boundary.** `embedHtml` is emitted verbatim via `set:html` and is **not** re-sanitized here — it relies on the `<iframe>` that a sanitizer would strip. The plugin sanitizes it at author time (allowlisted attributes over an https-only `src`); treat your CMS content as trusted, and sanitize on the server before storing if you accept `embed` blocks from untrusted authors.
+
+To fully control the markup, override the `embed` block. It receives `embedHtml`, `embedSrc`, `provider`, `thumbnail`, `aspectRatio`, `customAspectRatio`, `alignment`, `caption`, and `title`:
+
+```astro
+---
+import { BlocksRenderer } from '@k11k/better-blocks-astro-renderer';
+import MyEmbed from '../components/MyEmbed.astro';
+const { blocks } = Astro.props;
+---
+
+<BlocksRenderer content={blocks} blocks={{ embed: MyEmbed }} />
+```
+
+### Video
+
+Block-level `video` nodes render a provider-aware video (`local`, `mux`, `api-video`, `cloudinary`, or `custom`) as a native HTML5 `<video>` player, with **zero client-side JavaScript**. The playback source is picked in order: an explicit `url`, then the Media-Library `file.url`, then — for `provider: "mux"` — a public-playback stream derived from `playbackId` (`https://stream.mux.com/{playbackId}.m3u8`, with a matching `https://image.mux.com/{playbackId}/thumbnail.jpg` poster when none is set). The `player` flags map 1:1 to the element — `controls` (default `true`), `autoplay`, `loop`, and `muted` (forced on whenever `autoplay` is set, since browsers block unmuted autoplay). A `transcript` URL renders as a `<track kind="captions">`, and the `caption` is associated via `aria-describedby`.
+
+The block renders a `<figure class="bb-video align-{alignment}">` with the same alignment / aspect-ratio behavior (and `--bb-video-max-width`, default `40rem`) as embeds. A `<video class="bb-video-player">` carries a `poster`, `playsinline`, and an inner fallback line with an open-link for browsers that can't play the source. When there is no playable source (e.g. a Mux node without `url`/`playbackId`) the poster renders as an `<img class="bb-video-poster">` instead.
+
+> **HLS/DASH (Mux) & the no-JS stance.** Streaming sources (`url` ending `.m3u8` / `.mpd`) only play natively in **Safari**; other browsers show the poster and the fallback link. Because a cross-browser player (`<mux-player>`, `hls.js`, …) requires a CDN script that conflicts with this package's zero-JavaScript output, the default renderer stays script-free and marks streaming figures with `data-hls`. To play HLS everywhere, **override the `video` block** with your own player — it receives `playbackId`, `url`, `poster`, and everything else below.
+
+To fully control the markup, override the `video` block. It receives `provider`, `url`, `assetId`, `playbackId`, `file`, `poster`, `title`, `caption`, `transcript`, `player`, `alignment`, `aspectRatio`, and `customAspectRatio`:
+
+```astro
+---
+import { BlocksRenderer } from '@k11k/better-blocks-astro-renderer';
+import MyVideo from '../components/MyVideo.astro';
+const { blocks } = Astro.props;
+---
+
+<BlocksRenderer content={blocks} blocks={{ video: MyVideo }} />
+```
+
+Both blocks need CSP `frame-src` / `img-src` / `media-src` hosts for the providers you use (YouTube, Vimeo, Mux, Cloudinary, …) — see the plugin README's "Embed / Video JSON shapes" for the exact directive list.
+
 ### Tables, Blockquotes & Code Blocks (GitHub-style)
 
 Tables, blockquotes, and code blocks ship with **GitHub-flavored defaults** out of the box — no CSS to import. Each default carries stable `bb-*` classes and a **scoped `<style>`** (still zero client-side JavaScript), rethemable from your own CSS via custom properties without replacing the markup. As with every block, supply a `blocks={{ … }}` override to take full control of the markup.
@@ -309,51 +353,67 @@ The copy button is themed via `--bb-code-copy-fg`, `--bb-code-copy-bg`, `--bb-co
 | `button` (CTA / file download)  | `<a>` / `<span>`        | Better Blocks               |
 | `social-embed`                  | `<figure>`              | Better Blocks               |
 | `audio` (HTML5 player)          | `<figure><audio>`       | Better Blocks               |
+| `embed` (generic iframe)        | `<figure><iframe>`      | Better Blocks               |
+| `video` (provider-aware)        | `<figure><video>`       | Better Blocks               |
 
 ### Block properties
 
-| Property       | Applies to                | Description                                                                                            |
-| -------------- | ------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `textAlign`    | paragraph, heading, quote | Text alignment (`left`, `center`, `right`, `justify`)                                                  |
-| `lineHeight`   | paragraph, heading, quote | CSS line-height value (e.g. `1.5`, `2.0`)                                                              |
-| `indent`       | paragraph, heading, quote | Block indentation level (`marginLeft: N * 2rem`)                                                       |
-| `indentLevel`  | list                      | Cycling list-style-type per nesting depth                                                              |
-| `format`       | list                      | `ordered`, `unordered`, or `todo`                                                                      |
-| `checked`      | list-item (in todo lists) | Checkbox state (`true`/`false`)                                                                        |
-| `target`       | link                      | `_blank` for new-tab links                                                                             |
-| `rel`          | link                      | `noopener noreferrer` for new-tab links                                                                |
-| `language`     | code                      | Shiki grammar for syntax highlighting (e.g. `typescript`, `python`); falls back to `plaintext`         |
-| `caption`      | image                     | Text displayed below the image                                                                         |
-| `imageAlign`   | image                     | Image alignment (`left`, `center`, `right`)                                                            |
-| `url`          | media-embed               | Embed URL (YouTube/Vimeo iframe src)                                                                   |
-| `originalUrl`  | media-embed               | Original user-provided URL                                                                             |
-| `format`       | math                      | `inline` (`<span>`) or `block` (`<div>`)                                                               |
-| `value`        | math                      | LaTeX source rendered with KaTeX                                                                       |
-| `format`       | diagram                   | `mermaid` (the only supported diagram format)                                                          |
-| `value`        | diagram                   | Mermaid source, pre-rendered to SVG on the server                                                      |
-| `summary`      | details                   | Plain-text label for the `<summary>`                                                                   |
-| `defaultOpen`  | details                   | Open on initial render (HTML `open` attribute)                                                         |
-| `buttonType`   | button                    | `link` (CTA) or `file` (Media Library download)                                                        |
-| `label`        | button                    | Visible button text                                                                                    |
-| `alignment`    | button                    | `left`, `center`, `right`, or `none` (inline)                                                          |
-| `link`         | button                    | `{ url, target?, rel?, ariaLabel? }` (link mode)                                                       |
-| `file`         | button                    | `{ url, name, size?, ext?, mime? }` (file mode)                                                        |
-| `showFileIcon` | button                    | Prefix a file-type icon (file mode)                                                                    |
-| `showFileSize` | button                    | Suffix a human-readable size, e.g. `(5 MB)`                                                            |
-| `filePreview`  | button                    | `true` opens the file in a new tab instead of downloading                                              |
-| `style`        | button                    | Inline CSS + `hover*` colors via custom properties                                                     |
-| `cssClass`     | button                    | Extra class appended to `bb-button`                                                                    |
-| `platform`     | social-embed              | `twitter`, `instagram`, `facebook`, `tiktok`, `linkedin`, `pinterest`                                  |
-| `url`          | social-embed              | Original post URL (used by the fallback link card)                                                     |
-| `embedCode`    | social-embed              | Optional manual HTML override (highest priority)                                                       |
-| `oembed`       | social-embed              | Fetched oEmbed payload `{ html, title, author, authorUrl, thumbnailUrl, providerName, width, height }` |
-| `alignment`    | social-embed              | `left`, `center` (default), or `right`                                                                 |
-| `caption`      | social-embed              | Optional caption rendered in a `<figcaption>`                                                          |
-| `file`         | audio                     | `{ url, id?, name?, ext?, hash?, mime?, size?, provider?, duration? }` (`url` is rendered as-is)       |
-| `title`        | audio                     | Optional heading rendered above the player                                                             |
-| `caption`      | audio                     | Optional caption rendered below the player in a `<figcaption>`                                         |
-| `player`       | audio                     | `{ controls (default true), autoplay, loop, preload }` (mapped 1:1 to `<audio>`)                       |
-| `alignment`    | audio                     | `left`, `center` (default), `right`, or `none` (full-width, inline)                                    |
+| Property            | Applies to                | Description                                                                                            |
+| ------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `textAlign`         | paragraph, heading, quote | Text alignment (`left`, `center`, `right`, `justify`)                                                  |
+| `lineHeight`        | paragraph, heading, quote | CSS line-height value (e.g. `1.5`, `2.0`)                                                              |
+| `indent`            | paragraph, heading, quote | Block indentation level (`marginLeft: N * 2rem`)                                                       |
+| `indentLevel`       | list                      | Cycling list-style-type per nesting depth                                                              |
+| `format`            | list                      | `ordered`, `unordered`, or `todo`                                                                      |
+| `checked`           | list-item (in todo lists) | Checkbox state (`true`/`false`)                                                                        |
+| `target`            | link                      | `_blank` for new-tab links                                                                             |
+| `rel`               | link                      | `noopener noreferrer` for new-tab links                                                                |
+| `language`          | code                      | Shiki grammar for syntax highlighting (e.g. `typescript`, `python`); falls back to `plaintext`         |
+| `caption`           | image                     | Text displayed below the image                                                                         |
+| `imageAlign`        | image                     | Image alignment (`left`, `center`, `right`)                                                            |
+| `url`               | media-embed               | Embed URL (YouTube/Vimeo iframe src)                                                                   |
+| `originalUrl`       | media-embed               | Original user-provided URL                                                                             |
+| `format`            | math                      | `inline` (`<span>`) or `block` (`<div>`)                                                               |
+| `value`             | math                      | LaTeX source rendered with KaTeX                                                                       |
+| `format`            | diagram                   | `mermaid` (the only supported diagram format)                                                          |
+| `value`             | diagram                   | Mermaid source, pre-rendered to SVG on the server                                                      |
+| `summary`           | details                   | Plain-text label for the `<summary>`                                                                   |
+| `defaultOpen`       | details                   | Open on initial render (HTML `open` attribute)                                                         |
+| `buttonType`        | button                    | `link` (CTA) or `file` (Media Library download)                                                        |
+| `label`             | button                    | Visible button text                                                                                    |
+| `alignment`         | button                    | `left`, `center`, `right`, or `none` (inline)                                                          |
+| `link`              | button                    | `{ url, target?, rel?, ariaLabel? }` (link mode)                                                       |
+| `file`              | button                    | `{ url, name, size?, ext?, mime? }` (file mode)                                                        |
+| `showFileIcon`      | button                    | Prefix a file-type icon (file mode)                                                                    |
+| `showFileSize`      | button                    | Suffix a human-readable size, e.g. `(5 MB)`                                                            |
+| `filePreview`       | button                    | `true` opens the file in a new tab instead of downloading                                              |
+| `style`             | button                    | Inline CSS + `hover*` colors via custom properties                                                     |
+| `cssClass`          | button                    | Extra class appended to `bb-button`                                                                    |
+| `platform`          | social-embed              | `twitter`, `instagram`, `facebook`, `tiktok`, `linkedin`, `pinterest`                                  |
+| `url`               | social-embed              | Original post URL (used by the fallback link card)                                                     |
+| `embedCode`         | social-embed              | Optional manual HTML override (highest priority)                                                       |
+| `oembed`            | social-embed              | Fetched oEmbed payload `{ html, title, author, authorUrl, thumbnailUrl, providerName, width, height }` |
+| `alignment`         | social-embed              | `left`, `center` (default), or `right`                                                                 |
+| `caption`           | social-embed              | Optional caption rendered in a `<figcaption>`                                                          |
+| `file`              | audio                     | `{ url, id?, name?, ext?, hash?, mime?, size?, provider?, duration? }` (`url` is rendered as-is)       |
+| `title`             | audio                     | Optional heading rendered above the player                                                             |
+| `caption`           | audio                     | Optional caption rendered below the player in a `<figcaption>`                                         |
+| `player`            | audio                     | `{ controls (default true), autoplay, loop, preload }` (mapped 1:1 to `<audio>`)                       |
+| `alignment`         | audio                     | `left`, `center` (default), `right`, or `none` (full-width, inline)                                    |
+| `embedHtml`         | embed                     | Sanitized `<iframe>` markup — the only field rendered (via `set:html`)                                 |
+| `provider`          | embed                     | `youtube`, `vimeo`, `loom`, `wistia`, `dailymotion`, `api-video`, or `generic`                         |
+| `aspectRatio`       | embed, video              | `16:9` (default), `21:9`, `4:3`, `1:1`, or `custom` (→ CSS `aspect-ratio`)                             |
+| `customAspectRatio` | embed, video              | Verbatim `aspect-ratio` value (e.g. `3 / 2`) used when `aspectRatio` is `custom`                       |
+| `alignment`         | embed, video              | `left`, `center` (default), `right`, or `none` (full-width)                                            |
+| `caption`           | embed, video              | Optional caption rendered below in a `<figcaption>`                                                    |
+| `title`             | embed, video              | Optional heading rendered above the media                                                              |
+| `provider`          | video                     | `local`, `mux`, `api-video`, `cloudinary`, or `custom`                                                 |
+| `url`               | video                     | Direct/stream URL (preferred source; for Mux, derivable from `playbackId`)                             |
+| `playbackId`        | video                     | Mux public playback id — streams and posters are derived from it                                       |
+| `file`              | video                     | Media-Library asset `{ url, id?, name?, ext?, mime?, size?, duration?, provider? }`                    |
+| `poster`            | video                     | Poster image URL (derived from a Mux `playbackId` when omitted)                                        |
+| `transcript`        | video                     | WebVTT captions URL rendered as `<track kind="captions">`                                              |
+| `player`            | video                     | `{ controls (default true), autoplay, loop, muted }` (`muted` forced on with `autoplay`)               |
 
 ## Supported Modifiers
 
