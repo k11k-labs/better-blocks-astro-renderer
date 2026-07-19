@@ -140,6 +140,31 @@ export function getListStyleType(format: 'ordered' | 'unordered', indentLevel: n
   return styles[indentLevel % styles.length];
 }
 
+// ── Embed / Video Layout ─────────────────────────────────────────────
+
+/**
+ * `justify-content` for the flex wrapper that positions an embed/video box:
+ * `left`/`center`/`right` → `flex-start`/`center`/`flex-end`; `none` stretches
+ * the box to the full column width.
+ */
+export const MEDIA_JUSTIFY: Record<string, string> = {
+  left: 'flex-start',
+  center: 'center',
+  right: 'flex-end',
+  none: 'stretch',
+};
+
+/**
+ * CSS `aspect-ratio` value from an editor aspect-ratio choice. Named ratios
+ * convert `"16:9"` → `16 / 9`; `"custom"` uses `customAspectRatio` verbatim
+ * (already in `W / H` form). Anything missing or empty falls back to `16 / 9`.
+ */
+export function getAspectRatio(aspectRatio?: string, customAspectRatio?: string): string {
+  if (aspectRatio === 'custom') return customAspectRatio?.trim() || '16 / 9';
+  if (aspectRatio?.includes(':')) return aspectRatio.replace(':', ' / ');
+  return aspectRatio?.trim() || '16 / 9';
+}
+
 // ── Text Modifiers (Marks) ───────────────────────────────────────────
 
 export type Mark = { name: string; value?: string };

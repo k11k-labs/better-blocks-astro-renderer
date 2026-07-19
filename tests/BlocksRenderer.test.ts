@@ -29,6 +29,8 @@ import CustomDetails from './fixtures/CustomDetails.astro';
 import CustomButton from './fixtures/CustomButton.astro';
 import CustomSocialEmbed from './fixtures/CustomSocialEmbed.astro';
 import CustomAudio from './fixtures/CustomAudio.astro';
+import CustomEmbedBlock from './fixtures/CustomEmbedBlock.astro';
+import CustomVideo from './fixtures/CustomVideo.astro';
 import CustomBold from './fixtures/CustomBold.astro';
 import CustomColor from './fixtures/CustomColor.astro';
 import CustomBg from './fixtures/CustomBg.astro';
@@ -1688,6 +1690,265 @@ describe('BlocksRenderer', () => {
     expect(el?.querySelector('.custom-audio-caption')?.textContent).toBe('Custom caption');
     // The default figure is not rendered when overridden.
     expect(container.querySelector('figure.bb-audio')).toBeNull();
+  });
+
+  // ── Embed (generic iframe / URL) ─────────────────────────────────
+
+  it('renders embedHtml verbatim inside an aligned, aspect-ratio figure', async () => {
+    const { container } = await render([
+      {
+        type: 'embed',
+        source: 'url',
+        provider: 'youtube',
+        embedHtml: '<iframe src="https://www.youtube.com/embed/abc12345678"></iframe>',
+        embedSrc: 'https://www.youtube.com/embed/abc12345678',
+        aspectRatio: '16:9',
+        alignment: 'center',
+      },
+    ]);
+    const figure = container.querySelector('figure.bb-embed');
+    expect(figure).not.toBeNull();
+    expect(figure?.classList.contains('align-center')).toBe(true);
+    const frame = container.querySelector('.bb-embed-frame');
+    expect(styleOf(frame)).toContain('aspect-ratio:16/9');
+    const iframe = frame?.querySelector('iframe');
+    expect(iframe?.getAttribute('src')).toBe('https://www.youtube.com/embed/abc12345678');
+  });
+
+  it('defaults embed alignment to center and aspect ratio to 16 / 9', async () => {
+    const { container } = await render([
+      { type: 'embed', embedHtml: '<iframe src="https://player.vimeo.com/video/1"></iframe>' },
+    ]);
+    const figure = container.querySelector('figure.bb-embed');
+    expect(figure?.classList.contains('align-center')).toBe(true);
+    expect(styleOf(container.querySelector('.bb-embed-frame'))).toContain('aspect-ratio:16/9');
+  });
+
+  it('converts a named aspect ratio and uses customAspectRatio verbatim', async () => {
+    const { container } = await render([
+      {
+        type: 'embed',
+        embedHtml: '<iframe src="https://www.loom.com/embed/1"></iframe>',
+        aspectRatio: '4:3',
+      },
+      {
+        type: 'embed',
+        embedHtml: '<iframe src="https://www.loom.com/embed/2"></iframe>',
+        aspectRatio: 'custom',
+        customAspectRatio: '3 / 2',
+      },
+    ]);
+    const frames = container.querySelectorAll('.bb-embed-frame');
+    expect(styleOf(frames[0])).toContain('aspect-ratio:4/3');
+    expect(styleOf(frames[1])).toContain('aspect-ratio:3/2');
+  });
+
+  it('flows an embed full-width when alignment is none', async () => {
+    const { container } = await render([
+      {
+        type: 'embed',
+        embedHtml: '<iframe src="https://www.dailymotion.com/embed/1"></iframe>',
+        alignment: 'none',
+      },
+    ]);
+    const figure = container.querySelector('figure.bb-embed');
+    expect(figure?.classList.contains('align-none')).toBe(true);
+    // Full-width: the frame is not capped by the max-width custom property.
+    expect(styleOf(container.querySelector('.bb-embed-frame'))).toContain('max-width:100%');
+  });
+
+  it('renders an embed title above and caption below in figcaptions', async () => {
+    const { container } = await render([
+      {
+        type: 'embed',
+        embedHtml: '<iframe src="https://www.youtube.com/embed/x"></iframe>',
+        title: 'Product Demo',
+        caption: 'A video explaining the feature',
+      },
+    ]);
+    const figure = container.querySelector('figure.bb-embed');
+    expect(figure?.querySelector('.bb-embed-title')?.textContent?.trim()).toBe('Product Demo');
+    expect(figure?.querySelector('.bb-embed-caption')?.textContent?.trim()).toBe(
+      'A video explaining the feature'
+    );
+  });
+
+  it('does not inject a widget script for embeds (plain iframe)', async () => {
+    const { html } = await render([
+      { type: 'embed', embedHtml: '<iframe src="https://www.youtube.com/embed/x"></iframe>' },
+    ]);
+    expect(html).not.toContain('<script');
+  });
+
+  it('routes embed through a custom renderer when provided', async () => {
+    const { container } = await render(
+      [
+        {
+          type: 'embed',
+          provider: 'vimeo',
+          embedHtml: '<iframe src="https://player.vimeo.com/video/9"></iframe>',
+          aspectRatio: '21:9',
+          alignment: 'left',
+          title: 'Custom title',
+          caption: 'Custom caption',
+        },
+      ],
+      { blocks: { embed: CustomEmbedBlock } }
+    );
+    const el = container.querySelector('div.custom-embed-block');
+    expect(el).not.toBeNull();
+    expect(el?.getAttribute('data-provider')).toBe('vimeo');
+    expect(el?.getAttribute('data-aspect')).toBe('21:9');
+    expect(el?.getAttribute('data-alignment')).toBe('left');
+    expect(el?.querySelector('.custom-embed-html iframe')?.getAttribute('src')).toBe(
+      'https://player.vimeo.com/video/9'
+    );
+    // The default figure is not rendered when overridden.
+    expect(container.querySelector('figure.bb-embed')).toBeNull();
+  });
+
+  // ── Video (provider-aware) ───────────────────────────────────────
+
+  it('renders a native <video> for a direct file URL with player flags mapped 1:1', async () => {
+    const { container } = await render([
+      {
+        type: 'video',
+        provider: 'local',
+        file: { id: 5, url: '/uploads/demo.mp4', mime: 'video/mp4' },
+        poster: '/uploads/demo.jpg',
+        player: { controls: true, autoplay: false, loop: true, muted: false },
+        alignment: 'right',
+        aspectRatio: '16:9',
+      },
+    ]);
+    const figure = container.querySelector('figure.bb-video');
+    expect(figure).not.toBeNull();
+    expect(figure?.classList.contains('align-right')).toBe(true);
+    expect(styleOf(container.querySelector('.bb-video-frame'))).toContain('aspect-ratio:16/9');
+    const video = figure?.querySelector('video.bb-video-player');
+    expect(video?.getAttribute('src')).toBe('/uploads/demo.mp4');
+    expect(video?.getAttribute('poster')).toBe('/uploads/demo.jpg');
+    expect(video?.hasAttribute('controls')).toBe(true);
+    expect(video?.hasAttribute('loop')).toBe(true);
+    expect(video?.hasAttribute('autoplay')).toBe(false);
+  });
+
+  it('defaults video controls to true and alignment to center', async () => {
+    const { container } = await render([
+      { type: 'video', provider: 'local', url: 'https://cdn.example.com/a.mp4' },
+    ]);
+    const figure = container.querySelector('figure.bb-video');
+    expect(figure?.classList.contains('align-center')).toBe(true);
+    expect(figure?.querySelector('video')?.hasAttribute('controls')).toBe(true);
+  });
+
+  it('forces muted on when autoplay is set', async () => {
+    const { container } = await render([
+      {
+        type: 'video',
+        provider: 'local',
+        url: 'https://cdn.example.com/a.mp4',
+        player: { autoplay: true, muted: false },
+      },
+    ]);
+    const video = container.querySelector('figure.bb-video video');
+    expect(video?.hasAttribute('autoplay')).toBe(true);
+    expect(video?.hasAttribute('muted')).toBe(true);
+  });
+
+  it('derives the Mux stream URL and poster from the playback id', async () => {
+    const { container } = await render([{ type: 'video', provider: 'mux', playbackId: 'def456' }]);
+    const figure = container.querySelector('figure.bb-video');
+    // HLS marker for consumer CSS / player upgrades.
+    expect(figure?.hasAttribute('data-hls')).toBe(true);
+    const video = figure?.querySelector('video');
+    expect(video?.getAttribute('src')).toBe('https://stream.mux.com/def456.m3u8');
+    expect(video?.getAttribute('poster')).toBe('https://image.mux.com/def456/thumbnail.jpg');
+  });
+
+  it('prefers an explicit url over the derived Mux stream', async () => {
+    const { container } = await render([
+      {
+        type: 'video',
+        provider: 'mux',
+        playbackId: 'def456',
+        url: 'https://stream.mux.com/custom.m3u8',
+      },
+    ]);
+    expect(container.querySelector('figure.bb-video video')?.getAttribute('src')).toBe(
+      'https://stream.mux.com/custom.m3u8'
+    );
+  });
+
+  it('adds a captions <track> and wires aria-describedby to the caption', async () => {
+    const { container } = await render([
+      {
+        type: 'video',
+        provider: 'local',
+        file: { id: 12, url: '/uploads/demo.mp4' },
+        transcript: 'https://example.com/captions.vtt',
+        caption: 'Watch this to get started',
+      },
+    ]);
+    const video = container.querySelector('figure.bb-video video');
+    const track = video?.querySelector('track');
+    expect(track?.getAttribute('kind')).toBe('captions');
+    expect(track?.getAttribute('src')).toBe('https://example.com/captions.vtt');
+    const capId = video?.getAttribute('aria-describedby');
+    expect(capId).toBe('bb-video-cap-12');
+    expect(container.querySelector(`#${capId}`)?.textContent?.trim()).toBe(
+      'Watch this to get started'
+    );
+  });
+
+  it('includes a fallback open-link inside <video>', async () => {
+    const { container } = await render([
+      { type: 'video', provider: 'local', url: 'https://cdn.example.com/a.mp4' },
+    ]);
+    const video = container.querySelector('figure.bb-video video');
+    expect(video?.textContent).toContain('Your browser can');
+    expect(video?.querySelector('a')?.getAttribute('href')).toBe('https://cdn.example.com/a.mp4');
+  });
+
+  it('renders a poster image when there is no playable source', async () => {
+    const { container } = await render([
+      { type: 'video', provider: 'mux', poster: 'https://image.mux.com/x/thumbnail.jpg' },
+    ]);
+    const figure = container.querySelector('figure.bb-video');
+    expect(figure?.querySelector('video')).toBeNull();
+    expect(figure?.querySelector('img.bb-video-poster')?.getAttribute('src')).toBe(
+      'https://image.mux.com/x/thumbnail.jpg'
+    );
+  });
+
+  it('does not inject any script for video blocks', async () => {
+    const { html } = await render([{ type: 'video', provider: 'mux', playbackId: 'def456' }]);
+    expect(html).not.toContain('<script');
+  });
+
+  it('routes video through a custom renderer when provided', async () => {
+    const { container } = await render(
+      [
+        {
+          type: 'video',
+          provider: 'mux',
+          playbackId: 'def456',
+          poster: 'https://image.mux.com/def456/thumbnail.jpg',
+          title: 'Custom title',
+          caption: 'Custom caption',
+          alignment: 'left',
+        },
+      ],
+      { blocks: { video: CustomVideo } }
+    );
+    const el = container.querySelector('div.custom-video');
+    expect(el).not.toBeNull();
+    expect(el?.getAttribute('data-provider')).toBe('mux');
+    expect(el?.getAttribute('data-playback-id')).toBe('def456');
+    expect(el?.getAttribute('data-alignment')).toBe('left');
+    expect(el?.querySelector('.custom-video-title')?.textContent).toBe('Custom title');
+    // The default figure is not rendered when overridden.
+    expect(container.querySelector('figure.bb-video')).toBeNull();
   });
 
   // ── Text Modifiers: uppercase, superscript, subscript ────────────
