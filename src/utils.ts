@@ -321,15 +321,29 @@ export const SOCIAL_SCRIPTS: Partial<Record<SocialPlatform, string>> = {
 export type SocialEmbedSource = { kind: 'html'; html: string } | { kind: 'fallback' };
 
 /**
+ * Strips `<script>` tags from (trusted) embed markup. Platform oEmbed payloads —
+ * TikTok's especially, which has no `omit_script` option — and hand-pasted
+ * Instagram/Facebook embed codes ship their widget `<script>` inline. Since the
+ * `set:html` output is server-rendered, those tags would execute a *second*
+ * copy of a widget script the lazy loader also injects. Removing them here makes
+ * `SocialEmbedScript.astro` the single injector, and also repairs content saved
+ * by plugin versions that stored the scripts server-side.
+ */
+export function stripScriptTags(html: string): string {
+  return html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
+}
+
+/**
  * Resolves which markup a social embed should render, following the source
  * priority from the plugin contract: author-pasted `embedCode` → provider
- * `oembed.html` → a fallback link card. Whitespace-only strings are treated as
+ * `oembed.html` → a fallback link card. Widget `<script>` tags are stripped (the
+ * lazy loader owns script injection). Whitespace-only strings are treated as
  * absent so an empty override doesn't blank out a usable oEmbed.
  */
 export function getSocialEmbedSource(node: SocialEmbedNode): SocialEmbedSource {
-  const embedCode = node.embedCode?.trim();
+  const embedCode = stripScriptTags(node.embedCode ?? '').trim();
   if (embedCode) return { kind: 'html', html: embedCode };
-  const oembedHtml = node.oembed?.html?.trim();
+  const oembedHtml = stripScriptTags(node.oembed?.html ?? '').trim();
   if (oembedHtml) return { kind: 'html', html: oembedHtml };
   return { kind: 'fallback' };
 }
