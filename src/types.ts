@@ -107,13 +107,27 @@ export type HorizontalLineNode = {
   children: [{ type: 'text'; text: '' }];
 };
 
+export type TableCellAlign = 'left' | 'center' | 'right';
+
 export type TableCellNode = {
   type: 'table-cell';
+  /** Horizontal text alignment. Omitted means `left`. */
+  align?: TableCellAlign;
+  /** Number of columns this cell spans. Omitted means `1`. */
+  colSpan?: number;
+  /** Number of rows this cell spans. Omitted means `1`. */
+  rowSpan?: number;
   children: InlineNode[];
 };
 
 export type TableHeaderCellNode = {
   type: 'table-header-cell';
+  /** Horizontal text alignment. Omitted means `left`. */
+  align?: TableCellAlign;
+  /** Number of columns this cell spans. Omitted means `1`. */
+  colSpan?: number;
+  /** Number of rows this cell spans. Omitted means `1`. */
+  rowSpan?: number;
   children: InlineNode[];
 };
 
@@ -517,7 +531,8 @@ export type AstroComponentFactory = (...args: any[]) => any;
  * - `code` — `{ plainText: string; language?: string }` (also available via `<slot />`)
  * - `image` — `{ image; caption?: string; imageAlign?: 'left' | 'center' | 'right' }`
  * - `horizontal-line` — no props
- * - `table` / `table-row` / `table-cell` / `table-header-cell` — children via `<slot />`
+ * - `table` / `table-row` — children via `<slot />`
+ * - `table-cell` / `table-header-cell` — `{ align?; colSpan?; rowSpan? }` (children via `<slot />`)
  * - `media-embed` — `{ url: string; originalUrl?: string }`
  * - `math` — `{ formula: string; inline: boolean }`
  * - `diagram` — `{ code: string; format: 'mermaid' }`

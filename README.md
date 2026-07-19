@@ -314,7 +314,7 @@ Both blocks need CSP `frame-src` / `img-src` / `media-src` hosts for the provide
 
 Tables, blockquotes, and code blocks ship with **GitHub-flavored defaults** out of the box — no CSS to import. Each default carries stable `bb-*` classes and a **scoped `<style>`** (still zero client-side JavaScript), rethemable from your own CSS via custom properties without replacing the markup. As with every block, supply a `blocks={{ … }}` override to take full control of the markup.
 
-**Tables** render as `<table class="bb-table">` with bordered cells, a shaded header, and zebra-striped body rows. Leading header rows (rows whose cells are all header cells) are grouped into a `<thead>`; the remaining rows go into `<tbody>`. The table scrolls horizontally on overflow. Retheme via `--bb-table-border`, `--bb-table-header-bg`, `--bb-table-row-bg`, and `--bb-table-stripe-bg`.
+**Tables** render as `<table class="bb-table">` with bordered cells, a shaded header, and zebra-striped body rows. Leading header rows (rows whose cells are all header cells) are grouped into a `<thead>` and their cells render as `<th scope="col">` for screen-reader header announcement; the remaining rows go into `<tbody>` as `<td>`. Cell `children` are the full set of inline nodes and marks (bold, links, inline math, colors, …) and render through the same inline renderer as paragraphs. Each cell honors three optional properties, all following the "absent means default" convention so existing content renders unchanged: `align` (`left` / `center` / `right`) maps to `text-align` (omitted ⇒ left), and `colSpan` / `rowSpan` map to the matching HTML attributes (omitted ⇒ 1). The table scrolls horizontally on overflow. Retheme via `--bb-table-border`, `--bb-table-header-bg`, `--bb-table-row-bg`, and `--bb-table-stripe-bg`.
 
 **Blockquotes** render as `<blockquote class="bb-quote">` with a muted left border and dimmed, indented text. Retheme via `--bb-quote-border` and `--bb-quote-fg`.
 
@@ -472,21 +472,22 @@ const { image, caption, imageAlign } = Astro.props;
 
 The props each custom block component receives:
 
-| Block                                                      | Props (plus `<slot />` for children where applicable)         |
-| ---------------------------------------------------------- | ------------------------------------------------------------- |
-| `paragraph`                                                | `{ style?}`                                                   |
-| `heading`                                                  | `{ level: 1–6; style? }`                                      |
-| `list`                                                     | `{ format: 'ordered' \| 'unordered' \| 'todo'; indentLevel }` |
-| `list-item`                                                | `{ checked? }`                                                |
-| `link`                                                     | `{ url; target?; rel? }`                                      |
-| `quote`                                                    | `{ style? }`                                                  |
-| `code`                                                     | `{ plainText; language? }` (also via `<slot />`)              |
-| `image`                                                    | `{ image; caption?; imageAlign? }` (no slot)                  |
-| `horizontal-line`                                          | _none_                                                        |
-| `table` / `table-row` / `table-cell` / `table-header-cell` | children via `<slot />`                                       |
-| `media-embed`                                              | `{ url; originalUrl? }` (no slot)                             |
-| `math`                                                     | `{ formula; inline }` (no slot) — bring your own math engine  |
-| `diagram`                                                  | `{ code; format }` (no slot) — bring your own diagram engine  |
+| Block                              | Props (plus `<slot />` for children where applicable)         |
+| ---------------------------------- | ------------------------------------------------------------- |
+| `paragraph`                        | `{ style?}`                                                   |
+| `heading`                          | `{ level: 1–6; style? }`                                      |
+| `list`                             | `{ format: 'ordered' \| 'unordered' \| 'todo'; indentLevel }` |
+| `list-item`                        | `{ checked? }`                                                |
+| `link`                             | `{ url; target?; rel? }`                                      |
+| `quote`                            | `{ style? }`                                                  |
+| `code`                             | `{ plainText; language? }` (also via `<slot />`)              |
+| `image`                            | `{ image; caption?; imageAlign? }` (no slot)                  |
+| `horizontal-line`                  | _none_                                                        |
+| `table` / `table-row`              | children via `<slot />`                                       |
+| `table-cell` / `table-header-cell` | `{ align?; colSpan?; rowSpan? }`, children via `<slot />`     |
+| `media-embed`                      | `{ url; originalUrl? }` (no slot)                             |
+| `math`                             | `{ formula; inline }` (no slot) — bring your own math engine  |
+| `diagram`                          | `{ code; format }` (no slot) — bring your own diagram engine  |
 
 ### Custom modifier renderers
 
