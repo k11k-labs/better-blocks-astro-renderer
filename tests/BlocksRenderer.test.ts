@@ -19,6 +19,8 @@ import CustomTable from './fixtures/CustomTable.astro';
 import CustomRow from './fixtures/CustomRow.astro';
 import CustomTh from './fixtures/CustomTh.astro';
 import CustomTd from './fixtures/CustomTd.astro';
+import CustomCode from './fixtures/CustomCode.astro';
+import CustomQuote from './fixtures/CustomQuote.astro';
 import CustomImage from './fixtures/CustomImage.astro';
 import CustomMath from './fixtures/CustomMath.astro';
 import CustomDiagram from './fixtures/CustomDiagram.astro';
@@ -41,6 +43,8 @@ type RenderProps = {
   blocks?: CustomBlocksConfig;
   modifiers?: CustomModifiersConfig;
   diagramTheme?: DiagramTheme;
+  codeTheme?: string;
+  codeCopyButton?: boolean;
 };
 
 async function render(content: BlocksContent | null, props: RenderProps = {}) {
@@ -454,6 +458,22 @@ describe('BlocksRenderer', () => {
     expect(byText(container, 'Wise words')?.closest('blockquote')).not.toBeNull();
   });
 
+  it('renders blockquote with the bb-quote class', async () => {
+    const { container } = await render([
+      { type: 'quote', children: [{ type: 'text', text: 'Wise words' }] },
+    ]);
+    expect(container.querySelector('blockquote.bb-quote')).not.toBeNull();
+  });
+
+  it('uses a custom quote renderer', async () => {
+    const { container } = await render(
+      [{ type: 'quote', children: [{ type: 'text', text: 'Wise words' }] }],
+      { blocks: { quote: CustomQuote } }
+    );
+    expect(container.querySelector('[data-testid="custom-quote"]')?.textContent).toBe('Wise words');
+    expect(container.querySelector('blockquote')).toBeNull();
+  });
+
   // ── Code Block ───────────────────────────────────────────────────
 
   it('renders code block', async () => {
@@ -463,6 +483,84 @@ describe('BlocksRenderer', () => {
     const code = container.querySelector('code');
     expect(code?.textContent).toBe('const x = 1;');
     expect(code?.closest('pre')).not.toBeNull();
+  });
+
+  it('wraps code blocks in a bb-code container', async () => {
+    const { container } = await render([
+      { type: 'code', children: [{ type: 'text', text: 'const x = 1;' }] },
+    ]);
+    expect(container.querySelector('.bb-code')).not.toBeNull();
+    expect(container.querySelector('.bb-code .astro-code')).not.toBeNull();
+  });
+
+  it('highlights code blocks with the given language', async () => {
+    const { container } = await render([
+      { type: 'code', language: 'typescript', children: [{ type: 'text', text: 'const x = 1;' }] },
+    ]);
+    expect(container.querySelector('pre.astro-code')?.getAttribute('data-language')).toBe(
+      'typescript'
+    );
+  });
+
+  it('falls back to plaintext for unknown or missing languages', async () => {
+    const { container } = await render([
+      { type: 'code', language: 'not-a-real-lang', children: [{ type: 'text', text: 'hi' }] },
+    ]);
+    expect(container.querySelector('pre.astro-code')?.getAttribute('data-language')).toBe(
+      'plaintext'
+    );
+  });
+
+  it('maps editor language values to Shiki grammar ids', async () => {
+    const { container } = await render([
+      { type: 'code', language: 'objectivec', children: [{ type: 'text', text: 'int a;' }] },
+    ]);
+    expect(container.querySelector('pre.astro-code')?.getAttribute('data-language')).toBe(
+      'objective-c'
+    );
+  });
+
+  it('applies the codeTheme prop to the highlighted output', async () => {
+    const { container } = await render(
+      [
+        {
+          type: 'code',
+          language: 'javascript',
+          children: [{ type: 'text', text: 'const x = 1;' }],
+        },
+      ],
+      { codeTheme: 'github-light' }
+    );
+    expect(container.querySelector('pre.astro-code')?.classList.contains('github-light')).toBe(
+      true
+    );
+  });
+
+  it('omits the copy button by default', async () => {
+    const { container } = await render([
+      { type: 'code', children: [{ type: 'text', text: 'const x = 1;' }] },
+    ]);
+    expect(container.querySelector('[data-bb-code-copy]')).toBeNull();
+  });
+
+  it('renders an opt-in copy button when codeCopyButton is set', async () => {
+    const { container } = await render(
+      [{ type: 'code', children: [{ type: 'text', text: 'const x = 1;' }] }],
+      { codeCopyButton: true }
+    );
+    expect(container.querySelector('.bb-code button[data-bb-code-copy]')).not.toBeNull();
+  });
+
+  it('uses a custom code renderer with plainText and language', async () => {
+    const { container } = await render(
+      [{ type: 'code', language: 'python', children: [{ type: 'text', text: 'x = 1' }] }],
+      { blocks: { code: CustomCode } }
+    );
+    const custom = container.querySelector('[data-testid="custom-code"]');
+    expect(custom).not.toBeNull();
+    expect(custom?.getAttribute('data-language')).toBe('python');
+    expect(custom?.textContent).toContain('x = 1');
+    expect(container.querySelector('.astro-code')).toBeNull();
   });
 
   // ── Image ────────────────────────────────────────────────────────
@@ -632,6 +730,52 @@ describe('BlocksRenderer', () => {
       },
     ]);
     expect(container.querySelector('tbody')).not.toBeNull();
+  });
+
+  it('applies the bb-table class and splits header rows into thead', async () => {
+    const { container } = await render([
+      {
+        type: 'table',
+        children: [
+          {
+            type: 'table-row',
+            children: [
+              { type: 'table-header-cell', children: [{ type: 'text', text: 'Name' }] },
+              { type: 'table-header-cell', children: [{ type: 'text', text: 'Age' }] },
+            ],
+          },
+          {
+            type: 'table-row',
+            children: [
+              { type: 'table-cell', children: [{ type: 'text', text: 'Alice' }] },
+              { type: 'table-cell', children: [{ type: 'text', text: '30' }] },
+            ],
+          },
+        ],
+      },
+    ]);
+    expect(container.querySelector('table.bb-table')).not.toBeNull();
+    // Header row lives in <thead>, data row in <tbody>.
+    expect(container.querySelectorAll('thead th')).toHaveLength(2);
+    expect(container.querySelector('thead td')).toBeNull();
+    expect(container.querySelectorAll('tbody td')).toHaveLength(2);
+    expect(container.querySelector('tbody th')).toBeNull();
+  });
+
+  it('renders a headerless table without an empty thead', async () => {
+    const { container } = await render([
+      {
+        type: 'table',
+        children: [
+          {
+            type: 'table-row',
+            children: [{ type: 'table-cell', children: [{ type: 'text', text: 'Cell' }] }],
+          },
+        ],
+      },
+    ]);
+    expect(container.querySelector('thead')).toBeNull();
+    expect(container.querySelectorAll('tbody td')).toHaveLength(1);
   });
 
   // ── Media Embed ──────────────────────────────────────────────────

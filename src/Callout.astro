@@ -13,9 +13,11 @@ interface Props {
   blocks?: CustomBlocksConfig;
   modifiers?: CustomModifiersConfig;
   diagramTheme?: DiagramTheme;
+  codeTheme?: string;
+  codeCopyButton?: boolean;
 }
 
-const { node, blocks, modifiers, diagramTheme } = Astro.props;
+const { node, blocks, modifiers, diagramTheme, codeTheme, codeCopyButton } = Astro.props;
 
 // GitHub-style alert metadata: default label and octicon path. Accent colors
 // live in the scoped <style> below (GitHub light palette, matching the React renderer).
@@ -57,6 +59,8 @@ const CalloutComp = blocks?.callout as any;
           blocks={blocks}
           modifiers={modifiers}
           diagramTheme={diagramTheme}
+          codeTheme={codeTheme}
+          codeCopyButton={codeCopyButton}
           index={index}
         />
       ))}
@@ -76,6 +80,8 @@ const CalloutComp = blocks?.callout as any;
             blocks={blocks}
             modifiers={modifiers}
             diagramTheme={diagramTheme}
+            codeTheme={codeTheme}
+            codeCopyButton={codeCopyButton}
             index={index}
           />
         ))}
