@@ -380,62 +380,246 @@
       "children": [{ "type": "text", "text": "Table" }]
     },
     {
+      "type": "paragraph",
+      "children": [
+        {
+          "type": "text",
+          "text": "Tables support semantic header rows (rendered as "
+        },
+        { "type": "text", "text": "<th scope=\"col\">", "code": true },
+        { "type": "text", "text": " inside " },
+        { "type": "text", "text": "<thead>", "code": true },
+        { "type": "text", "text": "), per-cell " },
+        { "type": "text", "text": "align", "code": true },
+        { "type": "text", "text": ", merged cells via " },
+        { "type": "text", "text": "colSpan", "code": true },
+        { "type": "text", "text": " / " },
+        { "type": "text", "text": "rowSpan", "code": true },
+        { "type": "text", "text": ", and the full set of inline marks inside cells." }
+      ]
+    },
+    {
       "type": "table",
       "children": [
         {
           "type": "table-row",
           "children": [
             { "type": "table-header-cell", "children": [{ "type": "text", "text": "Feature" }] },
-            { "type": "table-header-cell", "children": [{ "type": "text", "text": "Status" }] },
-            { "type": "table-header-cell", "children": [{ "type": "text", "text": "Phase" }] }
+            {
+              "type": "table-header-cell",
+              "align": "center",
+              "children": [{ "type": "text", "text": "Status" }]
+            },
+            {
+              "type": "table-header-cell",
+              "align": "right",
+              "children": [{ "type": "text", "text": "Phase" }]
+            }
           ]
         },
         {
           "type": "table-row",
           "children": [
-            { "type": "table-cell", "children": [{ "type": "text", "text": "Horizontal line" }] },
-            { "type": "table-cell", "children": [{ "type": "text", "text": "Done", "color": "#38A169" }] },
-            { "type": "table-cell", "children": [{ "type": "text", "text": "1" }] }
+            {
+              "type": "table-cell",
+              "children": [
+                {
+                  "type": "link",
+                  "url": "https://github.com/k11k-labs/strapi-plugin-better-blocks",
+                  "children": [{ "type": "text", "text": "Semantic headers" }]
+                }
+              ]
+            },
+            {
+              "type": "table-cell",
+              "align": "center",
+              "children": [{ "type": "text", "text": "Done", "bold": true, "color": "#38A169" }]
+            },
+            {
+              "type": "table-cell",
+              "align": "right",
+              "children": [{ "type": "text", "text": "1" }]
+            }
           ]
         },
         {
           "type": "table-row",
           "children": [
-            { "type": "table-cell", "children": [{ "type": "text", "text": "Text alignment" }] },
-            { "type": "table-cell", "children": [{ "type": "text", "text": "Done", "color": "#38A169" }] },
-            { "type": "table-cell", "children": [{ "type": "text", "text": "2" }] }
+            {
+              "type": "table-cell",
+              "children": [
+                { "type": "text", "text": "Cell " },
+                { "type": "text", "text": "align", "code": true }
+              ]
+            },
+            {
+              "type": "table-cell",
+              "align": "center",
+              "children": [{ "type": "text", "text": "Done", "bold": true, "color": "#38A169" }]
+            },
+            {
+              "type": "table-cell",
+              "align": "right",
+              "children": [{ "type": "text", "text": "2" }]
+            }
           ]
         },
         {
           "type": "table-row",
           "children": [
-            { "type": "table-cell", "children": [{ "type": "text", "text": "Tables" }] },
-            { "type": "table-cell", "children": [{ "type": "text", "text": "Done", "color": "#38A169" }] },
-            { "type": "table-cell", "children": [{ "type": "text", "text": "2" }] }
+            {
+              "type": "table-cell",
+              "children": [
+                { "type": "text", "text": "Inline math (" },
+                {
+                  "type": "math",
+                  "format": "inline",
+                  "value": "a^2 + b^2 = c^2",
+                  "children": [{ "type": "text", "text": "" }]
+                },
+                { "type": "text", "text": ")" }
+              ]
+            },
+            {
+              "type": "table-cell",
+              "align": "center",
+              "children": [{ "type": "text", "text": "Done", "bold": true, "color": "#38A169" }]
+            },
+            {
+              "type": "table-cell",
+              "align": "right",
+              "children": [{ "type": "text", "text": "3" }]
+            }
           ]
         },
         {
           "type": "table-row",
           "children": [
-            { "type": "table-cell", "children": [{ "type": "text", "text": "To-do lists" }] },
-            { "type": "table-cell", "children": [{ "type": "text", "text": "Done", "color": "#38A169" }] },
-            { "type": "table-cell", "children": [{ "type": "text", "text": "2" }] }
+            {
+              "type": "table-cell",
+              "children": [
+                { "type": "text", "text": "Merged cells", "italic": true }
+              ]
+            },
+            {
+              "type": "table-cell",
+              "align": "center",
+              "children": [{ "type": "text", "text": "Done", "bold": true, "color": "#38A169" }]
+            },
+            {
+              "type": "table-cell",
+              "align": "right",
+              "children": [{ "type": "text", "text": "3" }]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "level": 3,
+      "children": [{ "type": "text", "text": "Merged cells (colSpan / rowSpan)" }]
+    },
+    {
+      "type": "paragraph",
+      "children": [
+        {
+          "type": "text",
+          "text": "A spanned-over slot carries no node — cells are emitted in document order and the span attributes reconstruct the grid, exactly like hand-written HTML."
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "children": [
+        {
+          "type": "table-row",
+          "children": [
+            {
+              "type": "table-header-cell",
+              "rowSpan": 2,
+              "children": [{ "type": "text", "text": "Region" }]
+            },
+            {
+              "type": "table-header-cell",
+              "rowSpan": 2,
+              "children": [{ "type": "text", "text": "Team" }]
+            },
+            {
+              "type": "table-header-cell",
+              "align": "center",
+              "colSpan": 2,
+              "children": [{ "type": "text", "text": "Half-year totals" }]
+            }
           ]
         },
         {
           "type": "table-row",
           "children": [
-            { "type": "table-cell", "children": [{ "type": "text", "text": "Media embeds" }] },
-            { "type": "table-cell", "children": [{ "type": "text", "text": "Done", "color": "#38A169" }] },
-            { "type": "table-cell", "children": [{ "type": "text", "text": "2" }] }
+            {
+              "type": "table-header-cell",
+              "align": "center",
+              "children": [{ "type": "text", "text": "Q3" }]
+            },
+            {
+              "type": "table-header-cell",
+              "align": "center",
+              "children": [{ "type": "text", "text": "Q4" }]
+            }
           ]
         },
         {
           "type": "table-row",
           "children": [
-            { "type": "table-cell", "children": [{ "type": "text", "text": "Math (KaTeX)" }] },
-            { "type": "table-cell", "children": [{ "type": "text", "text": "Done", "color": "#38A169" }] },
-            { "type": "table-cell", "children": [{ "type": "text", "text": "3" }] }
+            {
+              "type": "table-cell",
+              "rowSpan": 2,
+              "children": [{ "type": "text", "text": "North" }]
+            },
+            { "type": "table-cell", "children": [{ "type": "text", "text": "Alpha" }] },
+            {
+              "type": "table-cell",
+              "align": "center",
+              "children": [{ "type": "text", "text": "12" }]
+            },
+            {
+              "type": "table-cell",
+              "align": "center",
+              "children": [{ "type": "text", "text": "18" }]
+            }
+          ]
+        },
+        {
+          "type": "table-row",
+          "children": [
+            { "type": "table-cell", "children": [{ "type": "text", "text": "Beta" }] },
+            {
+              "type": "table-cell",
+              "align": "center",
+              "children": [{ "type": "text", "text": "9" }]
+            },
+            {
+              "type": "table-cell",
+              "align": "center",
+              "children": [{ "type": "text", "text": "14" }]
+            }
+          ]
+        },
+        {
+          "type": "table-row",
+          "children": [
+            { "type": "table-cell", "children": [{ "type": "text", "text": "South" }] },
+            { "type": "table-cell", "children": [{ "type": "text", "text": "Gamma" }] },
+            {
+              "type": "table-cell",
+              "align": "center",
+              "children": [{ "type": "text", "text": "11" }]
+            },
+            {
+              "type": "table-cell",
+              "align": "center",
+              "children": [{ "type": "text", "text": "20" }]
+            }
           ]
         }
       ]

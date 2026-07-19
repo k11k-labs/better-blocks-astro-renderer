@@ -23,6 +23,12 @@ let split = 0;
 while (split < node.children.length && isHeaderRow(node.children[split])) split++;
 const headRows = node.children.slice(0, split);
 const bodyRows = node.children.slice(split);
+
+// `align` is omitted when left, so only emit a style when explicitly set.
+const alignStyle = (cell: TableNode['children'][number]['children'][number]) =>
+  cell.align ? { textAlign: cell.align } : undefined;
+// `colSpan` / `rowSpan` are omitted when 1; only emit the attribute past that.
+const span = (value: number | undefined) => (value && value > 1 ? value : undefined);
 ---
 
 {
@@ -33,13 +39,30 @@ const bodyRows = node.children.slice(split);
         const content = <Inline nodes={cell.children} blocks={blocks} modifiers={modifiers} />;
 
         if (isHeader && HeaderCellComp) {
-          return <HeaderCellComp>{content}</HeaderCellComp>;
+          return (
+            <HeaderCellComp align={cell.align} colSpan={cell.colSpan} rowSpan={cell.rowSpan}>
+              {content}
+            </HeaderCellComp>
+          );
         }
         if (!isHeader && CellComp) {
-          return <CellComp>{content}</CellComp>;
+          return (
+            <CellComp align={cell.align} colSpan={cell.colSpan} rowSpan={cell.rowSpan}>
+              {content}
+            </CellComp>
+          );
         }
         const CellTag = isHeader ? 'th' : 'td';
-        return <CellTag>{content}</CellTag>;
+        return (
+          <CellTag
+            scope={isHeader ? 'col' : undefined}
+            style={alignStyle(cell)}
+            colspan={span(cell.colSpan)}
+            rowspan={span(cell.rowSpan)}
+          >
+            {content}
+          </CellTag>
+        );
       });
       return RowComp ? <RowComp>{cells}</RowComp> : <tr>{cells}</tr>;
     };

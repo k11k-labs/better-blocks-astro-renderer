@@ -780,6 +780,172 @@ describe('BlocksRenderer', () => {
     expect(container.querySelectorAll('tbody td')).toHaveLength(1);
   });
 
+  it('renders header cells as <th scope="col">', async () => {
+    const { container } = await render([
+      {
+        type: 'table',
+        children: [
+          {
+            type: 'table-row',
+            children: [{ type: 'table-header-cell', children: [{ type: 'text', text: 'Name' }] }],
+          },
+        ],
+      },
+    ]);
+    expect(container.querySelector('th')?.getAttribute('scope')).toBe('col');
+    // Data cells carry no scope.
+    const { container: c2 } = await render([
+      {
+        type: 'table',
+        children: [
+          {
+            type: 'table-row',
+            children: [{ type: 'table-cell', children: [{ type: 'text', text: 'Alice' }] }],
+          },
+        ],
+      },
+    ]);
+    expect(c2.querySelector('td')?.getAttribute('scope')).toBeNull();
+  });
+
+  it('maps cell align to text-align, defaulting to left when absent', async () => {
+    const { container } = await render([
+      {
+        type: 'table',
+        children: [
+          {
+            type: 'table-row',
+            children: [
+              {
+                type: 'table-header-cell',
+                align: 'center',
+                children: [{ type: 'text', text: 'H' }],
+              },
+            ],
+          },
+          {
+            type: 'table-row',
+            children: [
+              { type: 'table-cell', align: 'right', children: [{ type: 'text', text: 'R' }] },
+              { type: 'table-cell', children: [{ type: 'text', text: 'L' }] },
+            ],
+          },
+        ],
+      },
+    ]);
+    expect(styleOf(container.querySelector('th'))).toContain('text-align:center');
+    const dataCells = container.querySelectorAll('td');
+    expect(styleOf(dataCells[0])).toContain('text-align:right');
+    // Absent align emits no inline text-align (left is the CSS default).
+    expect(styleOf(dataCells[1])).not.toContain('text-align');
+  });
+
+  it('maps colSpan / rowSpan to attributes, defaulting to 1 when absent', async () => {
+    const { container } = await render([
+      {
+        type: 'table',
+        children: [
+          {
+            type: 'table-row',
+            children: [
+              {
+                type: 'table-header-cell',
+                colSpan: 2,
+                rowSpan: 2,
+                children: [{ type: 'text', text: 'Span' }],
+              },
+            ],
+          },
+          {
+            type: 'table-row',
+            children: [
+              { type: 'table-cell', colSpan: 1, children: [{ type: 'text', text: 'One' }] },
+            ],
+          },
+        ],
+      },
+    ]);
+    const th = container.querySelector('th');
+    expect(th?.getAttribute('colspan')).toBe('2');
+    expect(th?.getAttribute('rowspan')).toBe('2');
+    // colSpan of 1 (or absent) emits no attribute — existing content unchanged.
+    const td = container.querySelector('td');
+    expect(td?.getAttribute('colspan')).toBeNull();
+    expect(td?.getAttribute('rowspan')).toBeNull();
+  });
+
+  it('routes cell children through the inline renderer (marks and links)', async () => {
+    const { container } = await render([
+      {
+        type: 'table',
+        children: [
+          {
+            type: 'table-row',
+            children: [
+              {
+                type: 'table-cell',
+                children: [
+                  { type: 'text', text: 'bold', bold: true },
+                  {
+                    type: 'link',
+                    url: 'https://example.com',
+                    children: [{ type: 'text', text: 'link' }],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ]);
+    const cell = container.querySelector('td');
+    expect(cell?.querySelector('strong')?.textContent).toBe('bold');
+    expect(cell?.querySelector('a')?.getAttribute('href')).toBe('https://example.com');
+  });
+
+  it('passes align / colSpan / rowSpan to custom cell renderers', async () => {
+    const { container } = await render(
+      [
+        {
+          type: 'table',
+          children: [
+            {
+              type: 'table-row',
+              children: [
+                {
+                  type: 'table-header-cell',
+                  align: 'center',
+                  colSpan: 2,
+                  children: [{ type: 'text', text: 'H' }],
+                },
+              ],
+            },
+            {
+              type: 'table-row',
+              children: [
+                {
+                  type: 'table-cell',
+                  align: 'right',
+                  rowSpan: 3,
+                  children: [{ type: 'text', text: 'D' }],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      {
+        blocks: { 'table-header-cell': CustomTh, 'table-cell': CustomTd },
+      }
+    );
+    const th = container.querySelector('[data-testid="custom-th"]');
+    expect(th?.getAttribute('data-align')).toBe('center');
+    expect(th?.getAttribute('data-colspan')).toBe('2');
+    const td = container.querySelector('[data-testid="custom-td"]');
+    expect(td?.getAttribute('data-align')).toBe('right');
+    expect(td?.getAttribute('data-rowspan')).toBe('3');
+  });
+
   // ── Media Embed ──────────────────────────────────────────────────
 
   it('renders media embed as responsive iframe', async () => {
