@@ -1423,6 +1423,59 @@ describe('BlocksRenderer', () => {
     ).toBe(false);
   });
 
+  it('strips widget <script> tags from oembed.html (lazy loader is the only injector)', async () => {
+    const { container } = await render([
+      {
+        type: 'social-embed',
+        platform: 'tiktok',
+        url: 'https://www.tiktok.com/@user/video/1',
+        oembed: {
+          html: '<blockquote class="tiktok-embed"><a href="x">link</a></blockquote><script async src="https://www.tiktok.com/embed.js"></script>',
+        },
+      },
+    ]);
+    const wrapper = container.querySelector('.bb-social-embed-html');
+    // The embed markup survives; the platform's own <script> does not.
+    expect(wrapper?.querySelector('blockquote.tiktok-embed')).not.toBeNull();
+    expect(wrapper?.querySelector('script')).toBeNull();
+    // Still tagged for the lazy loader, which owns script injection.
+    expect(
+      container.querySelector('figure.bb-social-embed')?.getAttribute('data-bb-social-platform')
+    ).toBe('tiktok');
+  });
+
+  it('strips <script> tags from a hand-pasted embedCode', async () => {
+    const { container } = await render([
+      {
+        type: 'social-embed',
+        platform: 'instagram',
+        url: 'https://www.instagram.com/p/abc/',
+        embedCode:
+          '<blockquote class="instagram-media"></blockquote><script async src="https://www.instagram.com/embed.js"></script>',
+      },
+    ]);
+    const wrapper = container.querySelector('.bb-social-embed-html');
+    expect(wrapper?.querySelector('blockquote.instagram-media')).not.toBeNull();
+    expect(wrapper?.querySelector('script')).toBeNull();
+  });
+
+  it('renders the fallback as a non-interactive div (no empty href) when no url is present', async () => {
+    const { container } = await render([
+      {
+        type: 'social-embed',
+        platform: 'instagram',
+        oembed: { providerName: 'Instagram', title: 'A post' },
+      },
+    ]);
+    const figure = container.querySelector('figure.bb-social-embed');
+    // No <a> at all — an anchor without an href would be meaningless.
+    expect(figure?.querySelector('a')).toBeNull();
+    const fallback = figure?.querySelector('div.bb-social-embed-fallback');
+    expect(fallback).not.toBeNull();
+    expect(fallback?.hasAttribute('href')).toBe(false);
+    expect(fallback?.querySelector('.bb-social-embed-fallback-title')?.textContent).toBe('A post');
+  });
+
   it('derives the provider name and aria-label from the platform when oembed is absent', async () => {
     const { container } = await render([
       { type: 'social-embed', platform: 'pinterest', url: 'https://pin.it/abc' },

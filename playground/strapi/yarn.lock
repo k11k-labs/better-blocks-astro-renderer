@@ -1226,10 +1226,10 @@
   resolved "https://registry.npmjs.org/@juggle/resize-observer/-/resize-observer-3.4.0.tgz"
   integrity sha512-dfLbk+PwWvFzSxwk3n5ySL0hfBog779o8h68wK/7/APo/7cgyWp5jcXockbxdk5kFRkbeXWm4Fbi9FrdN381sA==
 
-"@k11k/strapi-plugin-better-blocks@^0.17.1":
-  version "0.17.1"
-  resolved "https://registry.yarnpkg.com/@k11k/strapi-plugin-better-blocks/-/strapi-plugin-better-blocks-0.17.1.tgz#7fc7863fab2d4352b4eda85aa5cfcfb36998c170"
-  integrity sha512-Wp1DHOzT7+xe0OKBxs+HWxMaW8UEw+dPRU9gXpnbhC2l/dhPT/osrPpU+D5SoLUx7Uaz7rwAlxp+bGkZ0mcGRw==
+"@k11k/strapi-plugin-better-blocks@^0.18.0":
+  version "0.18.0"
+  resolved "https://registry.yarnpkg.com/@k11k/strapi-plugin-better-blocks/-/strapi-plugin-better-blocks-0.18.0.tgz#b139e72bd6ba41d8f13599ed0d37de01f9809ec5"
+  integrity sha512-oCnHQ7WtPbsi2xGoHl/v7KdPsIlXU2kQ6ZkjnNc10YszoJt0N3sWcAr/piHwkcVuv3bqDe0d45efJ94Cz5c8TQ==
   dependencies:
     katex "^0.16.11"
     mermaid "^11.15.0"

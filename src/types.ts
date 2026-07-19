@@ -293,7 +293,8 @@ export type SocialEmbedOembed = {
 export type SocialEmbedNode = {
   type: 'social-embed';
   platform: SocialPlatform;
-  url: string;
+  /** Optional — platforms without a tokenless oEmbed can be saved embed-code-only. */
+  url?: string;
   /** Author-pasted manual override, takes priority over `oembed.html`. Trusted. */
   embedCode?: string;
   /** Fetched server-side by the plugin at author time. */

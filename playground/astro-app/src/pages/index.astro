@@ -151,8 +151,15 @@ try {
                   <p style="color: #666; font-size: 14px; margin-top: 0;">
                     The same social embeds as in the article above. Platform widget scripts load
                     lazily via an <code>IntersectionObserver</code> — scroll one into view and its
-                    script is injected once. The embed with no <code>embedCode</code>/
-                    <code>oembed.html</code> degrades to a fallback link card.
+                    script is injected <strong>once</strong>. Widget <code>&lt;script&gt;</code>
+                    tags shipped inside the embed markup (e.g. TikTok's oEmbed, hand-pasted embed
+                    codes) are stripped so the loader is the single injector — no duplicate. TikTok
+                    is re-processed via <code>tiktokEmbed.lib.render()</code>. Pinterest, Instagram,
+                    and LinkedIn here return self-contained <code>&lt;iframe&gt;</code>s that render
+                    without any widget script. Embeds with no
+                    <code>embedCode</code>/<code>oembed.html</code> degrade to
+                    a fallback card, which is a non-interactive <code>&lt;div&gt;</code> (not an empty
+                    <code>&lt;a href=""&gt;</code>) when the node also has no post URL.
                   </p>
                   <BlocksRenderer content={socialEmbeds} />
 
