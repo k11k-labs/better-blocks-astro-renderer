@@ -154,9 +154,10 @@ try {
                     script is injected <strong>once</strong>. Widget <code>&lt;script&gt;</code>
                     tags shipped inside the embed markup (TikTok's oEmbed, hand-pasted Instagram
                     codes) are stripped so the loader is the single injector — no duplicate. TikTok
-                    is re-processed via <code>tiktokEmbed.lib.render()</code>. Embeds with no
-                    <code>embedCode</code>/<code>oembed.html</code> degrade to a fallback card, which
-                    is a non-interactive <code>&lt;div&gt;</code> (not an empty
+                    is re-processed via <code>tiktokEmbed.lib.render()</code>. Pinterest and LinkedIn
+                    return self-contained <code>&lt;iframe&gt;</code>s that render without any widget
+                    script. Embeds with no <code>embedCode</code>/<code>oembed.html</code> degrade to
+                    a fallback card, which is a non-interactive <code>&lt;div&gt;</code> (not an empty
                     <code>&lt;a href=""&gt;</code>) when the node also has no post URL.
                   </p>
                   <BlocksRenderer content={socialEmbeds} />

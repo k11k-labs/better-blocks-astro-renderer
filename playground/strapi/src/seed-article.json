@@ -868,9 +868,22 @@
       "alignment": "center",
       "caption": "TikTok — its oEmbed html ships an inline <script>. It's stripped before render, so the lazy loader is the only injector (no duplicate embed.js), and the loader calls tiktokEmbed.lib.render() to hydrate the blockquote.",
       "oembed": {
-        "html": "<blockquote class=\"tiktok-embed\" cite=\"https://www.tiktok.com/@scout2015/video/6718335390845095173\" data-video-id=\"6718335390845095173\" style=\"max-width: 605px;min-width: 325px;\"><section><a target=\"_blank\" title=\"@scout2015\" href=\"https://www.tiktok.com/@scout2015?refer=embed\">@scout2015</a></section></blockquote><script async src=\"https://www.tiktok.com/embed.js\"></script>",
-        "author": "scout2015",
+        "html": "<blockquote class=\"tiktok-embed\" cite=\"https://www.tiktok.com/@scout2015/video/6718335390845095173\" data-video-id=\"6718335390845095173\" data-embed-from=\"oembed\" style=\"max-width:605px; min-width:325px;\"> <section> <a target=\"_blank\" title=\"@scout2015\" href=\"https://www.tiktok.com/@scout2015?refer=embed\">@scout2015</a> <p>Scramble up ur name &amp; I&rsquo;ll try to guess it&#128525;&#10084;&#65039; <a title=\"foryoupage\" target=\"_blank\" href=\"https://www.tiktok.com/tag/foryoupage?refer=embed\">#foryoupage</a> <a title=\"petsoftiktok\" target=\"_blank\" href=\"https://www.tiktok.com/tag/petsoftiktok?refer=embed\">#petsoftiktok</a> <a title=\"aesthetic\" target=\"_blank\" href=\"https://www.tiktok.com/tag/aesthetic?refer=embed\">#aesthetic</a></p> <a target=\"_blank\" title=\"&#9835; original sound - tiff\" href=\"https://www.tiktok.com/music/original-sound-6689804660171082501?refer=embed\">&#9835; original sound - tiff</a> </section> </blockquote><script async src=\"https://www.tiktok.com/embed.js\"></script>",
+        "author": "Scout, Suki & Stella",
         "providerName": "TikTok"
+      }
+    },
+    {
+      "type": "social-embed",
+      "platform": "pinterest",
+      "url": "https://www.pinterest.com/pin/99360735500167749/",
+      "alignment": "center",
+      "caption": "Pinterest — its modern oEmbed returns a self-contained <iframe>, so the pin renders on its own (the pinit.js widget script is not required).",
+      "oembed": {
+        "html": "<iframe src=\"https://assets.pinterest.com/ext/embed.html?id=99360735500167749&src=oembed\" height=\"436\" width=\"450\" frameborder=\"0\" scrolling=\"no\"></iframe>",
+        "title": "Love my Pinterest t-shirt!",
+        "author": "Kent Brewster",
+        "providerName": "Pinterest"
       }
     },
     {
@@ -878,7 +891,7 @@
       "platform": "instagram",
       "url": "https://www.instagram.com/p/CmqQpMPvzy2/",
       "alignment": "center",
-      "caption": "Instagram — a hand-pasted embedCode that ships its own widget <script>. The script is stripped from the stored markup so it isn't injected a second time.",
+      "caption": "Instagram — a hand-pasted embedCode ships its own widget <script>, which is stripped so it isn't injected twice. (Instagram's SDK only fully hydrates the card on domains registered with Instagram, so on localhost it may stay minimal — the demonstrated fix is the de-duplication, not Instagram's own rendering.)",
       "embedCode": "<blockquote class=\"instagram-media\" data-instgrm-permalink=\"https://www.instagram.com/p/CmqQpMPvzy2/\" data-instgrm-version=\"14\"><a href=\"https://www.instagram.com/p/CmqQpMPvzy2/\">A post shared on Instagram</a></blockquote><script async src=\"//www.instagram.com/embed.js\"></script>"
     },
     {
