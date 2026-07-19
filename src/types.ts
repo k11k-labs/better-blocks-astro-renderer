@@ -80,6 +80,12 @@ export type QuoteNode = {
 
 export type CodeNode = {
   type: 'code';
+  /**
+   * Language attached in the editor (e.g. `typescript`, `python`). Drives Shiki
+   * syntax highlighting via Astro's `<Code>` component. Unknown or missing
+   * values render as themed-but-unhighlighted `plaintext`.
+   */
+  language?: string;
   children: InlineNode[];
 };
 
@@ -394,7 +400,7 @@ export type AstroComponentFactory = (...args: any[]) => any;
  * - `list-item` — `{ checked?: boolean }`
  * - `link` — `{ url: string; target?: string; rel?: string }`
  * - `quote` — `{ style?: StyleValue }`
- * - `code` — `{ plainText: string }` (also available via `<slot />`)
+ * - `code` — `{ plainText: string; language?: string }` (also available via `<slot />`)
  * - `image` — `{ image; caption?: string; imageAlign?: 'left' | 'center' | 'right' }`
  * - `horizontal-line` — no props
  * - `table` / `table-row` / `table-cell` / `table-header-cell` — children via `<slot />`
@@ -467,4 +473,17 @@ export type BlocksRendererProps = {
    * Ignored when a custom `diagram` renderer is supplied via `blocks.diagram`.
    */
   diagramTheme?: DiagramTheme;
+  /**
+   * Shiki theme for the default `code` block highlighting. Any bundled Shiki
+   * theme name (e.g. `github-dark`, `github-light`, `dracula`, `nord`).
+   * Defaults to `github-dark`. Ignored when a custom `code` renderer is
+   * supplied via `blocks.code`.
+   */
+  codeTheme?: string;
+  /**
+   * Adds a client-side "Copy" button to default `code` blocks. Off by default
+   * to keep the output zero-JavaScript; when `true`, a small script is bundled
+   * to wire up the buttons. Ignored when a custom `code` renderer is supplied.
+   */
+  codeCopyButton?: boolean;
 };

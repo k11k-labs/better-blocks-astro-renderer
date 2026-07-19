@@ -335,8 +335,43 @@
     },
     {
       "type": "code",
+      "language": "typescript",
       "children": [
         { "type": "text", "text": "import { BlocksRenderer } from '@k11k/better-blocks-react-renderer';\n\n<BlocksRenderer content={blocks} />" }
+      ]
+    },
+    {
+      "type": "code",
+      "language": "python",
+      "children": [
+        { "type": "text", "text": "def greet(name: str) -> str:\n    return f\"Hello, {name}!\"\n\nprint(greet(\"world\"))" }
+      ]
+    },
+    {
+      "type": "code",
+      "language": "bash",
+      "children": [
+        { "type": "text", "text": "#!/usr/bin/env bash\nset -euo pipefail\nfor f in *.astro; do\n  echo \"Rendering $f\"\ndone" }
+      ]
+    },
+    {
+      "type": "code",
+      "language": "rust",
+      "children": [
+        { "type": "text", "text": "fn main() {\n    let blocks = vec![1, 2, 3];\n    let total: i32 = blocks.iter().sum();\n    println!(\"total = {total}\");\n}" }
+      ]
+    },
+    {
+      "type": "code",
+      "language": "json",
+      "children": [
+        { "type": "text", "text": "{\n  \"type\": \"code\",\n  \"language\": \"json\",\n  \"children\": [{ \"type\": \"text\", \"text\": \"…\" }]\n}" }
+      ]
+    },
+    {
+      "type": "code",
+      "children": [
+        { "type": "text", "text": "This block has no language set — it renders as themed plaintext (no syntax colors)." }
       ]
     },
     {

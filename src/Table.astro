@@ -13,11 +13,21 @@ const TableComp = blocks?.table as any;
 const RowComp = blocks?.['table-row'] as any;
 const CellComp = blocks?.['table-cell'] as any;
 const HeaderCellComp = blocks?.['table-header-cell'] as any;
+
+// A row is a header row when every cell is a header cell. Leading header rows
+// go into <thead>; everything from the first non-header row onward is <tbody>.
+const isHeaderRow = (row: TableNode['children'][number]) =>
+  row.children.length > 0 && row.children.every((cell) => cell.type === 'table-header-cell');
+
+let split = 0;
+while (split < node.children.length && isHeaderRow(node.children[split])) split++;
+const headRows = node.children.slice(0, split);
+const bodyRows = node.children.slice(split);
 ---
 
 {
   (() => {
-    const rows = node.children.map((row) => {
+    const renderRow = (row: TableNode['children'][number]) => {
       const cells = row.children.map((cell) => {
         const isHeader = cell.type === 'table-header-cell';
         const content = <Inline nodes={cell.children} blocks={blocks} modifiers={modifiers} />;
@@ -32,14 +42,51 @@ const HeaderCellComp = blocks?.['table-header-cell'] as any;
         return <CellTag>{content}</CellTag>;
       });
       return RowComp ? <RowComp>{cells}</RowComp> : <tr>{cells}</tr>;
-    });
+    };
 
-    return TableComp ? (
-      <TableComp>{rows}</TableComp>
-    ) : (
-      <table>
-        <tbody>{rows}</tbody>
+    // Custom table renderer: keep the flat rows contract the override API has
+    // always used (no forced thead/tbody split).
+    if (TableComp) {
+      return <TableComp>{node.children.map(renderRow)}</TableComp>;
+    }
+
+    return (
+      <table class="bb-table">
+        {headRows.length > 0 && <thead>{headRows.map(renderRow)}</thead>}
+        <tbody>{bodyRows.map(renderRow)}</tbody>
       </table>
     );
   })()
 }
+
+<style>
+  /* GitHub-style table: bordered cells, a shaded header, zebra-striped body
+     rows, and horizontal scroll on overflow. Retheme via the --bb-table-*
+     custom properties. */
+  .bb-table {
+    display: block;
+    width: max-content;
+    max-width: 100%;
+    margin: 1rem 0;
+    overflow: auto;
+    border-collapse: collapse;
+    border-spacing: 0;
+    border: 1px solid var(--bb-table-border, #d0d7de);
+  }
+  .bb-table th,
+  .bb-table td {
+    padding: 0.375rem 0.8125rem;
+    border: 1px solid var(--bb-table-border, #d0d7de);
+    text-align: left;
+  }
+  .bb-table th {
+    font-weight: 600;
+    background: var(--bb-table-header-bg, #f6f8fa);
+  }
+  .bb-table tbody tr {
+    background: var(--bb-table-row-bg, #ffffff);
+  }
+  .bb-table tbody tr:nth-child(2n) {
+    background: var(--bb-table-stripe-bg, #f6f8fa);
+  }
+</style>

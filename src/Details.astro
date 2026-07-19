@@ -7,9 +7,11 @@ interface Props {
   blocks?: CustomBlocksConfig;
   modifiers?: CustomModifiersConfig;
   diagramTheme?: DiagramTheme;
+  codeTheme?: string;
+  codeCopyButton?: boolean;
 }
 
-const { node, blocks, modifiers, diagramTheme } = Astro.props;
+const { node, blocks, modifiers, diagramTheme, codeTheme, codeCopyButton } = Astro.props;
 
 const DetailsComp = blocks?.details as any;
 ---
@@ -23,6 +25,8 @@ const DetailsComp = blocks?.details as any;
           blocks={blocks}
           modifiers={modifiers}
           diagramTheme={diagramTheme}
+          codeTheme={codeTheme}
+          codeCopyButton={codeCopyButton}
           index={index}
         />
       ))}
@@ -37,6 +41,8 @@ const DetailsComp = blocks?.details as any;
             blocks={blocks}
             modifiers={modifiers}
             diagramTheme={diagramTheme}
+            codeTheme={codeTheme}
+            codeCopyButton={codeCopyButton}
             index={index}
           />
         ))}

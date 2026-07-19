@@ -3,6 +3,8 @@ import type { BlockNode, CustomBlocksConfig, CustomModifiersConfig, DiagramTheme
 import Inline from './Inline.astro';
 import List from './List.astro';
 import Table from './Table.astro';
+import Quote from './Quote.astro';
+import Code from './Code.astro';
 import Math from './Math.astro';
 import Diagram from './Diagram.astro';
 import Callout from './Callout.astro';
@@ -10,23 +12,25 @@ import Details from './Details.astro';
 import Button from './Button.astro';
 import SocialEmbed from './SocialEmbed.astro';
 import Audio from './Audio.astro';
-import { getBlockStyle, getPlainText } from './utils';
+import { getBlockStyle } from './utils';
 
 interface Props {
   block: BlockNode;
   blocks?: CustomBlocksConfig;
   modifiers?: CustomModifiersConfig;
   diagramTheme?: DiagramTheme;
+  /** Shiki theme for default `code` blocks. */
+  codeTheme?: string;
+  /** Whether default `code` blocks render an opt-in copy button. */
+  codeCopyButton?: boolean;
   /** Position among sibling blocks — forwarded to blocks that need a stable key. */
   index?: number;
 }
 
-const { block, blocks, modifiers, diagramTheme, index } = Astro.props;
+const { block, blocks, modifiers, diagramTheme, codeTheme, codeCopyButton, index } = Astro.props;
 
 const ParagraphComp = blocks?.paragraph as any;
 const HeadingComp = blocks?.heading as any;
-const QuoteComp = blocks?.quote as any;
-const CodeComp = blocks?.code as any;
 const ImageComp = blocks?.image as any;
 const HrComp = blocks?.['horizontal-line'] as any;
 const EmbedComp = blocks?.['media-embed'] as any;
@@ -73,39 +77,11 @@ const EmbedComp = blocks?.['media-embed'] as any;
 
 {block.type === 'list' && <List node={block} blocks={blocks} modifiers={modifiers} />}
 
-{
-  block.type === 'quote' && (
-    <Fragment>
-      {(() => {
-        const style = getBlockStyle(block);
-        return QuoteComp ? (
-          <QuoteComp style={style}>
-            <Inline nodes={block.children} blocks={blocks} modifiers={modifiers} />
-          </QuoteComp>
-        ) : (
-          <blockquote style={style}>
-            <Inline nodes={block.children} blocks={blocks} modifiers={modifiers} />
-          </blockquote>
-        );
-      })()}
-    </Fragment>
-  )
-}
+{block.type === 'quote' && <Quote node={block} blocks={blocks} modifiers={modifiers} />}
 
 {
   block.type === 'code' && (
-    <Fragment>
-      {(() => {
-        const plainText = getPlainText(block.children);
-        return CodeComp ? (
-          <CodeComp plainText={plainText}>{plainText}</CodeComp>
-        ) : (
-          <pre>
-            <code>{plainText}</code>
-          </pre>
-        );
-      })()}
-    </Fragment>
+    <Code node={block} blocks={blocks} codeTheme={codeTheme} codeCopyButton={codeCopyButton} />
   )
 }
 

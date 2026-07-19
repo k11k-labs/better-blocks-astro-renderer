@@ -266,28 +266,49 @@ const { blocks } = Astro.props;
 <BlocksRenderer content={blocks} blocks={{ audio: MyAudio }} />
 ```
 
+### Tables, Blockquotes & Code Blocks (GitHub-style)
+
+Tables, blockquotes, and code blocks ship with **GitHub-flavored defaults** out of the box — no CSS to import. Each default carries stable `bb-*` classes and a **scoped `<style>`** (still zero client-side JavaScript), rethemable from your own CSS via custom properties without replacing the markup. As with every block, supply a `blocks={{ … }}` override to take full control of the markup.
+
+**Tables** render as `<table class="bb-table">` with bordered cells, a shaded header, and zebra-striped body rows. Leading header rows (rows whose cells are all header cells) are grouped into a `<thead>`; the remaining rows go into `<tbody>`. The table scrolls horizontally on overflow. Retheme via `--bb-table-border`, `--bb-table-header-bg`, `--bb-table-row-bg`, and `--bb-table-stripe-bg`.
+
+**Blockquotes** render as `<blockquote class="bb-quote">` with a muted left border and dimmed, indented text. Retheme via `--bb-quote-border` and `--bb-quote-fg`.
+
+**Code blocks** are **syntax-highlighted with [Shiki](https://shiki.style/)** via Astro's built-in `<Code />` component — highlighting happens at build/SSR, so the output is styled static HTML with **zero client-side JavaScript**. The block's `language` (attached in the editor) selects the grammar; unknown or missing languages fall back to themed-but-unhighlighted `plaintext`, so a stray value never breaks the build. The highlighted `<pre>` is wrapped in a `<div class="bb-code">`.
+
+Two props on `<BlocksRenderer>` tune the defaults:
+
+- `codeTheme` — any bundled Shiki theme name (`github-dark` default, or `github-light`, `dracula`, `nord`, …).
+- `codeCopyButton` — set `true` to add a copy button to each code block. It's **off by default** to keep the output zero-JavaScript; enabling it bundles a small client script.
+
+```astro
+<BlocksRenderer content={blocks} codeTheme="github-light" codeCopyButton />
+```
+
+The copy button is themed via `--bb-code-copy-fg`, `--bb-code-copy-bg`, `--bb-code-copy-border`, and `--bb-code-copy-hover-bg`.
+
 ## Supported Blocks
 
-| Block                           | Default element      | Source                      |
-| ------------------------------- | -------------------- | --------------------------- |
-| `paragraph`                     | `<p>`                | Strapi core                 |
-| `heading` (1&ndash;6)           | `<h1>`&ndash;`<h6>`  | Strapi core                 |
-| `list` (ordered/unordered/todo) | `<ol>` / `<ul>`      | Strapi core + Better Blocks |
-| `list-item`                     | `<li>`               | Strapi core                 |
-| `link`                          | `<a>`                | Strapi core                 |
-| `quote`                         | `<blockquote>`       | Strapi core                 |
-| `code`                          | `<pre><code>`        | Strapi core                 |
-| `image`                         | `<figure><img>`      | Strapi core                 |
-| `horizontal-line`               | `<hr>`               | Better Blocks               |
-| `table`                         | `<table>`            | Better Blocks               |
-| `media-embed`                   | `<iframe>` (16:9)    | Better Blocks               |
-| `math` (inline/block)           | `<span>` / `<div>`   | Better Blocks               |
-| `diagram` (mermaid)             | `<div>` (inline SVG) | Better Blocks               |
-| `callout` (admonition)          | `<aside>`            | Better Blocks               |
-| `details` (collapsible)         | `<details>`          | Better Blocks               |
-| `button` (CTA / file download)  | `<a>` / `<span>`     | Better Blocks               |
-| `social-embed`                  | `<figure>`           | Better Blocks               |
-| `audio` (HTML5 player)          | `<figure><audio>`    | Better Blocks               |
+| Block                           | Default element         | Source                      |
+| ------------------------------- | ----------------------- | --------------------------- |
+| `paragraph`                     | `<p>`                   | Strapi core                 |
+| `heading` (1&ndash;6)           | `<h1>`&ndash;`<h6>`     | Strapi core                 |
+| `list` (ordered/unordered/todo) | `<ol>` / `<ul>`         | Strapi core + Better Blocks |
+| `list-item`                     | `<li>`                  | Strapi core                 |
+| `link`                          | `<a>`                   | Strapi core                 |
+| `quote`                         | `<blockquote>`          | Strapi core                 |
+| `code`                          | `<pre>` (Shiki)         | Strapi core                 |
+| `image`                         | `<figure><img>`         | Strapi core                 |
+| `horizontal-line`               | `<hr>`                  | Better Blocks               |
+| `table`                         | `<table>` (thead/tbody) | Better Blocks               |
+| `media-embed`                   | `<iframe>` (16:9)       | Better Blocks               |
+| `math` (inline/block)           | `<span>` / `<div>`      | Better Blocks               |
+| `diagram` (mermaid)             | `<div>` (inline SVG)    | Better Blocks               |
+| `callout` (admonition)          | `<aside>`               | Better Blocks               |
+| `details` (collapsible)         | `<details>`             | Better Blocks               |
+| `button` (CTA / file download)  | `<a>` / `<span>`        | Better Blocks               |
+| `social-embed`                  | `<figure>`              | Better Blocks               |
+| `audio` (HTML5 player)          | `<figure><audio>`       | Better Blocks               |
 
 ### Block properties
 
@@ -301,6 +322,7 @@ const { blocks } = Astro.props;
 | `checked`      | list-item (in todo lists) | Checkbox state (`true`/`false`)                                                                        |
 | `target`       | link                      | `_blank` for new-tab links                                                                             |
 | `rel`          | link                      | `noopener noreferrer` for new-tab links                                                                |
+| `language`     | code                      | Shiki grammar for syntax highlighting (e.g. `typescript`, `python`); falls back to `plaintext`         |
 | `caption`      | image                     | Text displayed below the image                                                                         |
 | `imageAlign`   | image                     | Image alignment (`left`, `center`, `right`)                                                            |
 | `url`          | media-embed               | Embed URL (YouTube/Vimeo iframe src)                                                                   |
@@ -398,7 +420,7 @@ The props each custom block component receives:
 | `list-item`                                                | `{ checked? }`                                                |
 | `link`                                                     | `{ url; target?; rel? }`                                      |
 | `quote`                                                    | `{ style? }`                                                  |
-| `code`                                                     | `{ plainText }` (also via `<slot />`)                         |
+| `code`                                                     | `{ plainText; language? }` (also via `<slot />`)              |
 | `image`                                                    | `{ image; caption?; imageAlign? }` (no slot)                  |
 | `horizontal-line`                                          | _none_                                                        |
 | `table` / `table-row` / `table-cell` / `table-header-cell` | children via `<slot />`                                       |
