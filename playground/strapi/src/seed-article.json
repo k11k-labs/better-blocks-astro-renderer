@@ -889,10 +889,15 @@
     {
       "type": "social-embed",
       "platform": "instagram",
-      "url": "https://www.instagram.com/p/CmqQpMPvzy2/",
+      "url": "https://www.instagram.com/p/BsOGulcndj-/",
       "alignment": "center",
-      "caption": "Instagram — a hand-pasted embedCode ships its own widget <script>, which is stripped so it isn't injected twice. (Instagram's SDK only fully hydrates the card on domains registered with Instagram, so on localhost it may stay minimal — the demonstrated fix is the de-duplication, not Instagram's own rendering.)",
-      "embedCode": "<blockquote class=\"instagram-media\" data-instgrm-permalink=\"https://www.instagram.com/p/CmqQpMPvzy2/\" data-instgrm-version=\"14\"><a href=\"https://www.instagram.com/p/CmqQpMPvzy2/\">A post shared on Instagram</a></blockquote><script async src=\"//www.instagram.com/embed.js\"></script>"
+      "caption": "Instagram — rendered from its self-contained /embed/ iframe, so the post shows without depending on Instagram's widget script hydrating the blockquote.",
+      "oembed": {
+        "html": "<iframe src=\"https://www.instagram.com/p/BsOGulcndj-/embed/captioned/\" width=\"400\" height=\"640\" frameborder=\"0\" scrolling=\"no\" style=\"max-width:100%;border:1px solid #dbdbdb;border-radius:3px;\"></iframe>",
+        "title": "World record egg",
+        "author": "world_record_egg",
+        "providerName": "Instagram"
+      }
     },
     {
       "type": "social-embed",
